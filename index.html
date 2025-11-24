@@ -3,495 +3,659 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zally's Pipeline Manager</title>
+    <title>Zally Ops: Pipe Mania 3D</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
         :root {
+            --bg-color: #2c3e50;
+            --grid-bg: #1a252f;
+            --pipe-metal: linear-gradient(90deg, #4a4a4a 0%, #999 50%, #4a4a4a 100%);
+            --pipe-rust: linear-gradient(90deg, #5d4037 0%, #8d6e63 50%, #5d4037 100%);
+            --water-flow: linear-gradient(90deg, #0288d1 0%, #29b6f6 50%, #0288d1 100%);
             --zalando-orange: #ff6900;
-            --zalando-black: #1a1a1a;
             --gemini-blue: #4285f4;
-            --gemini-light: #e8f0fe;
-            --success: #4caf50;
-            --error: #e91e63;
-            --bg: #f5f5f5;
         }
 
         body {
+            background-color: var(--bg-color);
+            color: white;
             font-family: 'Roboto', sans-serif;
-            background-color: var(--bg);
-            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            color: #333;
-        }
-
-        /* HEADER */
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        h1 {
-            color: var(--zalando-black);
-            font-size: 2.5rem;
             margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            overflow: hidden;
+            user-select: none;
         }
 
-        h1 span { color: var(--zalando-orange); }
-
-        .subtitle {
-            font-size: 1.1rem;
-            color: #666;
-            margin-top: 10px;
+        /* HEADER & UI */
+        .header-ui {
+            display: flex;
+            justify-content: space-between;
+            width: 620px;
+            margin-bottom: 15px;
+            align-items: center;
         }
 
-        /* PIPELINE VISUALIZATION */
-        .pipeline-container {
+        .zally-badge {
             display: flex;
             align-items: center;
-            justify-content: center;
-            width: 90%;
-            max-width: 1000px;
-            margin-bottom: 40px;
-            position: relative;
+            gap: 15px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 2px solid var(--zalando-orange);
+            transition: transform 0.2s;
         }
 
-        .node {
-            background: white;
-            border: 3px solid #ccc;
-            border-radius: 15px;
-            padding: 20px;
-            width: 160px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            z-index: 2;
-            transition: all 0.3s;
-        }
-
-        .node-icon { font-size: 2.5rem; margin-bottom: 10px; display: block; }
-        .node-label { font-weight: bold; font-size: 0.8rem; color: #555; text-transform: uppercase; }
-        .node-desc { font-size: 0.75rem; color: #888; margin-top: 5px; }
-
-        .pipe {
-            height: 12px;
-            background: #ddd;
-            flex-grow: 1;
-            margin: 0 -10px; /* Overlap slightly */
-            position: relative;
-            z-index: 1;
-            transition: background 1s;
-        }
-
-        /* Active/Error States */
-        .node.broken { border-color: var(--error); box-shadow: 0 0 15px rgba(233, 30, 99, 0.3); }
-        .node.fixed { border-color: var(--success); border-width: 4px; }
-        
-        .pipe.flowing { background: var(--gemini-blue); }
-        
-        /* Animation for flow */
-        .flow-particle {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 0%;
-            background: var(--gemini-blue);
-            transition: width 1.5s ease-out;
-        }
-
-        /* INTERACTION AREA WITH ZALLY */
-        .interaction-wrapper {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            width: 90%;
-            max-width: 800px;
-            gap: 20px;
-        }
-
-        /* ZALLY AVATAR STYLE */
-        .zally-container {
-            flex-shrink: 0;
-            text-align: center;
-            width: 150px;
+        .zally-badge:hover {
+            transform: scale(1.05);
+            background: rgba(255, 105, 0, 0.1);
         }
 
         .zally-avatar {
-            width: 120px;
-            height: 120px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            border: 5px solid var(--zalando-orange);
+            border: 3px solid white;
             object-fit: cover;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             background: white;
-            transition: transform 0.3s;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
-        .zally-avatar.happy {
-            transform: translateY(-10px) scale(1.1);
-            border-color: var(--success);
+        .level-info {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            text-align: right;
+            text-shadow: 2px 2px 0 #000;
         }
 
-        .zally-name {
-            font-weight: 900;
-            color: var(--zalando-black);
-            margin-top: 10px;
-            font-size: 1.1rem;
-        }
-
-        .controls-area {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            border-top-left-radius: 0; /* Speech bubble effect */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            flex-grow: 1;
+        /* GAME GRID */
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(6, 100px); /* 6 Colonne */
+            grid-template-rows: repeat(6, 100px);    /* 6 Righe */
+            gap: 4px;
+            background: var(--grid-bg);
+            border: 8px solid #34495e;
+            border-radius: 10px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             position: relative;
         }
 
-        /* Little triangle for speech bubble */
-        .controls-area::before {
-            content: '';
+        /* TILE (Singola cella) */
+        .tile {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            background: #2c3e50;
+            overflow: hidden;
+        }
+
+        /* CURSORE DI ZALLY */
+        .cursor {
             position: absolute;
-            top: 0;
-            left: -20px;
-            width: 0;
-            height: 0;
-            border-top: 20px solid white;
-            border-left: 20px solid transparent;
-        }
-
-        .problem-statement {
-            font-size: 1.2rem;
-            margin-bottom: 25px;
-            font-weight: 500;
-            line-height: 1.5;
-            color: #444;
-        }
-
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-        }
-
-        .tool-btn {
-            background: white;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            padding: 15px 5px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tool-btn:hover {
-            border-color: var(--gemini-blue);
-            background: var(--gemini-light);
-            transform: translateY(-3px);
-        }
-
-        .tool-btn span { font-size: 1.8rem; }
-        .tool-btn strong { color: var(--zalando-black); font-size: 0.8rem; }
-
-        /* SUCCESS MODAL / FEEDBACK */
-        .feedback-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.98);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 20px;
-            animation: fadeIn 0.3s;
+            width: 100px;
+            height: 100px;
+            border: 4px solid var(--zalando-orange);
+            box-sizing: border-box;
             z-index: 10;
+            pointer-events: none;
+            box-shadow: 0 0 20px var(--zalando-orange);
+            transition: all 0.1s ease;
         }
 
-        .feedback-icon { font-size: 4rem; color: var(--success); margin-bottom: 10px; }
-        .feedback-title { font-size: 1.5rem; color: var(--zalando-black); font-weight: 900; margin-bottom: 10px; }
-        .feedback-text { max-width: 80%; text-align: center; color: #555; line-height: 1.6; margin-bottom: 20px; }
-        
-        .next-btn {
-            background: var(--zalando-orange);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(255, 105, 0, 0.4);
-            transition: transform 0.2s;
-        }
-        
-        .next-btn:hover { transform: scale(1.05); }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Progress Bar */
-        .progress-bar {
-            position: fixed;
-            bottom: 0;
+        .cursor::after {
+            content: 'ZALLY';
+            position: absolute;
+            bottom: -25px;
             left: 0;
-            height: 10px;
-            background: var(--zalando-orange);
-            width: 0%;
-            transition: width 0.5s;
+            width: 100%;
+            text-align: center;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            color: var(--zalando-orange);
+            text-shadow: 2px 2px 0 #000;
         }
 
-        @media (max-width: 700px) {
-            .interaction-wrapper { flex-direction: column; align-items: center; }
-            .controls-area { border-radius: 20px; width: 100%; box-sizing: border-box; }
-            .controls-area::before { display: none; } /* Hide speech bubble arrow on mobile */
-            .pipeline-container { transform: scale(0.8); width: 100%; }
+        /* GLI ELEMENTI DEL TUBO (Il cuore realistico) */
+        .pipe-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
         }
+
+        /* Il corpo del tubo */
+        .arm {
+            position: absolute;
+            background: var(--pipe-metal);
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5), 2px 2px 5px rgba(0,0,0,0.3);
+            z-index: 1;
+        }
+
+        /* Il giunto centrale */
+        .joint {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #bbb 0%, #555 100%);
+            border-radius: 50%;
+            z-index: 2;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+        }
+
+        /* Posizioni dei bracci */
+        .arm.north { top: 0; left: 35px; width: 30px; height: 50px; }
+        .arm.east  { top: 35px; right: 0; width: 50px; height: 30px; }
+        .arm.south { bottom: 0; left: 35px; width: 30px; height: 50px; }
+        .arm.west  { top: 35px; left: 0; width: 50px; height: 30px; }
+
+        /* ACQUA (Sovrapposizione che appare quando scorre) */
+        .water {
+            position: absolute;
+            background: var(--water-flow);
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 3;
+            box-shadow: 0 0 10px #00bcd4;
+        }
+        
+        .water.active { opacity: 1; }
+
+        /* Dimensioni acqua (leggermente più piccole del tubo) */
+        .water.center { top: 35px; left: 35px; width: 30px; height: 30px; border-radius: 50%; }
+        .water.north { top: 0; left: 40px; width: 20px; height: 50px; }
+        .water.east  { top: 40px; right: 0; width: 50px; height: 20px; }
+        .water.south { bottom: 0; left: 40px; width: 20px; height: 50px; }
+        .water.west  { top: 40px; left: 0; width: 50px; height: 20px; }
+
+        /* MODIFICATORI */
+        /* Tubo Arrugginito (Glitch) */
+        .tile.glitch .arm { background: var(--pipe-rust); }
+        .tile.glitch .joint { background: radial-gradient(circle, #8d6e63 0%, #3e2723 100%); }
+        .tile.glitch::after {
+            content: '⚠️';
+            position: absolute;
+            top: 5px; right: 5px;
+            font-size: 20px;
+            z-index: 5;
+            animation: pulse 1s infinite;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        /* Start / End Labels */
+        .tile.start::before { content: 'IN'; position: absolute; top:5px; left:5px; color:#4caf50; font-weight:bold; font-size:12px; z-index:5; text-shadow: 1px 1px 0 #000;}
+        .tile.end::before { content: 'OUT'; position: absolute; bottom:5px; right:5px; color:#ffeb3b; font-weight:bold; font-size:12px; z-index:5; text-shadow: 1px 1px 0 #000;}
+
+        /* MODALI */
+        .modal {
+            position: absolute;
+            background: rgba(20, 20, 20, 0.95);
+            border: 2px solid var(--gemini-blue);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 0 50px rgba(66, 133, 244, 0.5);
+        }
+
+        .modal h2 { color: var(--gemini-blue); font-family: 'Press Start 2P'; margin-bottom: 20px; font-size: 16px; line-height: 1.5; }
+        .modal p { line-height: 1.6; margin-bottom: 20px; color: #ddd; }
+        
+        .quiz-btn {
+            background: #333;
+            border: 1px solid #666;
+            color: white;
+            padding: 15px;
+            width: 100%;
+            margin: 5px 0;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+        }
+        .quiz-btn:hover { background: var(--gemini-blue); border-color: white; }
+
+        .key-hint {
+            position: absolute;
+            bottom: 20px;
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-family: 'Roboto', sans-serif;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Zally's <span>Pipeline</span></h1>
-        <div class="subtitle">Data Enablement Simulator</div>
-    </header>
-
-    <!-- THE PIPELINE -->
-    <div class="pipeline-container">
-        <!-- Start Node -->
-        <div class="node">
-            <span class="node-icon">📂</span>
-            <div class="node-label">INPUT</div>
-            <div class="node-desc">Dati Grezzi</div>
+    <!-- Header -->
+    <div class="header-ui">
+        <div class="zally-badge">
+            <!-- IMMAGINE ZALLY INTEGRATA QUI -->
+            <img src="zally-water.jpg" class="zally-avatar" alt="Zally">
+            <div>
+                <strong style="display:block; font-size:14px; text-transform:uppercase; letter-spacing:1px;">ZALLY OPS</strong>
+                <span style="font-size:11px; color:#ccc;">Pipeline Engineer</span>
+            </div>
         </div>
-
-        <!-- Pipe 1 -->
-        <div class="pipe" id="pipe-left">
-            <div class="flow-particle" id="flow-left"></div>
-        </div>
-
-        <!-- Problem Node (Center) -->
-        <div class="node broken" id="center-node">
-            <span class="node-icon" id="status-icon">⚠️</span>
-            <div class="node-label" id="status-label">BLOCCO</div>
-            <div class="node-desc" id="status-desc">Errore nei dati</div>
-        </div>
-
-        <!-- Pipe 2 -->
-        <div class="pipe" id="pipe-right">
-            <div class="flow-particle" id="flow-right"></div>
-        </div>
-
-        <!-- End Node -->
-        <div class="node">
-            <span class="node-icon">📊</span>
-            <div class="node-label">OUTPUT</div>
-            <div class="node-desc">Report Pronto</div>
+        <div class="level-info">
+            LIVELLO <span id="lvl-num" style="color:var(--zalando-orange)">1</span><br>
+            <span id="task-name" style="color:#aaa; font-size:10px; margin-top:5px; display:block;">DATA CLEANING</span>
         </div>
     </div>
 
-    <!-- INTERACTION AREA -->
-    <div class="interaction-wrapper">
-        
-        <!-- Zally Character -->
-        <div class="zally-container">
-            <!-- NOTA: Assicurati che 'zally-water.jpg' sia nella stessa cartella -->
-            <img src="zally-water.jpg" class="zally-avatar" id="zally-img" alt="Zally Avatar">
-            <div class="zally-name">Zally</div>
-        </div>
-
-        <!-- Game Controls -->
-        <div class="controls-area">
-            <div id="game-ui">
-                <div class="problem-statement" id="problem-text">
-                    Caricamento scenario...
-                </div>
-
-                <div class="tools-grid">
-                    <button class="tool-btn" onclick="checkAnswer('smartfill')">
-                        <span>✨</span>
-                        <strong>Smart Fill</strong>
-                    </button>
-                    <button class="tool-btn" onclick="checkAnswer('formula')">
-                        <span>➗</span>
-                        <strong>Genera Formula</strong>
-                    </button>
-                    <button class="tool-btn" onclick="checkAnswer('chart')">
-                        <span>📈</span>
-                        <strong>Crea Grafico</strong>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Feedback Overlay (Hidden by default) -->
-            <div class="feedback-overlay" id="feedback-ui">
-                <div class="feedback-icon">✅</div>
-                <div class="feedback-title">OTTIMO LAVORO!</div>
-                <div class="feedback-text" id="feedback-msg">
-                    Gemini ha risolto il problema.
-                </div>
-                <button class="next-btn" onclick="nextLevel()">PROSSIMO STEP ➔</button>
-            </div>
-            
-            <!-- Error Overlay -->
-            <div class="feedback-overlay" id="error-ui" style="background:rgba(255,255,255,0.95);">
-                <div class="feedback-icon" style="color:var(--error)">⚠️</div>
-                <div class="feedback-title">NON PROPRIO...</div>
-                <div class="feedback-text" id="error-msg">
-                    Questa funzione non è ideale qui.
-                </div>
-                <button class="next-btn" style="background:#555" onclick="hideError()">RIPROVA</button>
-            </div>
-
-        </div>
+    <!-- Area di Gioco -->
+    <div id="game-board">
+        <!-- Generato via JS -->
+        <div id="cursor" class="cursor"></div>
     </div>
 
-    <div class="progress-bar" id="progress"></div>
+    <div class="key-hint">
+        FRECCE: Muovi | SPAZIO: Ruota | INVIO: Gemini (Su Ruggine) | F: Apri Flusso
+    </div>
+
+    <!-- MODAL: Istruzioni Iniziali -->
+    <div id="start-modal" class="modal" style="display:block;">
+        <h2>PIPE MANIA: OPS EDITION</h2>
+        <p>Benvenuto nei sotterranei dei dati di Zalando.</p>
+        <p>Il sistema di tubature è vecchio e arrugginito. Devi connettere l'INPUT (Dati) all'OUTPUT (Report).</p>
+        <p style="color:var(--zalando-orange); font-weight:bold;">Attenzione ai tubi arrugginiti! <br>Sono "Glitch" nei dati.</p>
+        <p>Posizionati sopra e premi <strong style="color:white; border:1px solid white; padding:2px 5px; border-radius:3px;">INVIO</strong> per chiedere a Gemini di ripararli.</p>
+        <button class="quiz-btn" onclick="startGame()" style="text-align:center; font-weight:bold; background:var(--zalando-orange); border-color:var(--zalando-orange);">INIZIA IL TURNO</button>
+    </div>
+
+    <!-- MODAL: Gemini Quiz -->
+    <div id="gemini-modal" class="modal">
+        <h2>✨ AIUTO GEMINI</h2>
+        <p id="gemini-q">Domanda...</p>
+        <div id="gemini-opts"></div>
+    </div>
+
+    <!-- MODAL: Successo -->
+    <div id="win-modal" class="modal">
+        <h2 style="color:#4caf50">FLUSSO STABILIZZATO!</h2>
+        <p>Ottimo lavoro! I dati scorrono perfettamente.</p>
+        <button class="quiz-btn" onclick="nextLevel()" style="text-align:center; background:#4caf50; border-color:#4caf50;">PROSSIMO LIVELLO ➔</button>
+    </div>
 
 <script>
-    // DATA: Scenario Definitions
+    // --- CONFIGURAZIONE ---
+    const COLS = 6;
+    const ROWS = 6;
+    
+    // Tipi di tubo: [N, E, S, W] (1 = aperto)
+    const PIPES = {
+        STRAIGHT: [1, 0, 1, 0], // I
+        ELBOW:    [1, 1, 0, 0], // L
+        TEE:      [1, 1, 1, 0], // T
+        CROSS:    [1, 1, 1, 1], // +
+        START:    [0, 1, 0, 0], // Solo Est
+        END:      [0, 0, 0, 1]  // Solo Ovest
+    };
+
+    // Scenari
     const LEVELS = [
         {
             id: 1,
-            title: "Dati Disordinati",
-            desc: "indirizzi confusi",
-            problem: "Ehi! Ho ricevuto un file fornitori ma la colonna indirizzo è un disastro: 'Nome - Città - CAP' tutto mischiato. Come faccio a separarli velocemente?",
-            correct: 'smartfill',
-            feedback: "<strong>Smart Fill (Riconoscimento Pattern)</strong> è perfetto qui! <br><br>Invece di impazzire con le formule di testo, fai un esempio a Gemini e lui capisce il modello per riempire tutte le altre righe.",
-            errorHint: "Mmh, le formule sono troppo complicate per questo. C'è un modo più 'smart' che impara dai tuoi esempi."
+            name: "DATA CLEANING",
+            task: "cleaning",
+            map: [ // 0=Vuoto, 1=Dritto, 2=Curva, 3=T, 4=Start, 5=End
+                [4, 1, 2, 0, 0, 0],
+                [0, 0, 1, 2, 1, 0],
+                [0, 2, 3, 0, 2, 5],
+                [0, 1, 0, 0, 1, 0],
+                [0, 2, 1, 2, 3, 0],
+                [0, 0, 0, 0, 0, 0]
+            ],
+            glitches: [{x:2, y:2}, {x:4, y:2}] // Coordinate dei tubi arrugginiti
         },
         {
             id: 2,
-            title: "Calcolo Mancante",
-            desc: "mancano i totali",
-            problem: "Ho bisogno di calcolare il 'Totale Vendite' (Prezzo x Quantità), ma devo includere SOLO gli ordini con Status 'Spedito'. Non ricordo la formula...",
-            correct: 'formula',
-            feedback: "<strong>Generazione Formule</strong> è la risposta! <br><br>Puoi chiedere a Gemini: <em>'Calcola il totale se la colonna E dice Spedito'</em>. Lui scriverà la funzione =SUMIF corretta per te.",
-            errorHint: "Smart Fill non fa calcoli matematici condizionali. Ti serve una funzione logica, ma non devi scriverla tu!"
-        },
-        {
-            id: 3,
-            title: "Report Urgente",
-            desc: "foglio di numeri",
-            problem: "Il capo vuole vedere SUBITO quale Brand sta vendendo di più. Ho solo questa tabella piena di numeri e non ho tempo per le Pivot.",
-            correct: 'chart',
-            feedback: "<strong>Creazione Grafici</strong> ci salva la vita. <br><br>Basta chiedere <em>'Crea un grafico a barre per vendite per Brand'</em> e Gemini lo genera istantaneamente. Report salvato!",
-            errorHint: "Una formula ti darebbe un numero, ma il capo vuole *vedere* il risultato a colpo d'occhio. Serve qualcosa di visivo."
+            name: "FORMULA GAP",
+            task: "formula",
+            map: [
+                [4, 2, 0, 2, 1, 2],
+                [0, 1, 0, 1, 0, 1],
+                [0, 3, 1, 3, 0, 1],
+                [0, 0, 0, 1, 0, 1],
+                [0, 2, 1, 2, 0, 5],
+                [0, 0, 0, 0, 0, 0]
+            ],
+            glitches: [{x:1, y:2}, {x:3, y:2}]
         }
     ];
 
-    let currentLevelIdx = 0;
+    const QUIZ = {
+        cleaning: {
+            q: "Questo tubo è intasato da formattazioni miste (Date USA vs EU). Come lo pulisci?",
+            opts: [
+                {t: "Lo cambio a mano cella per cella", ok: false},
+                {t: "Prompt: 'Converti tutte le date in DD/MM/YYYY'", ok: true},
+                {t: "Cancello la colonna", ok: false}
+            ]
+        },
+        formula: {
+            q: "Il tubo perde! Manca una formula per calcolare l'IVA solo per la Germania.",
+            opts: [
+                {t: "Prompt: 'Se Nazione è DE, moltiplica per 0.19'", ok: true},
+                {t: "Cerco la formula IF su Google", ok: false},
+                {t: "Metto 19% ovunque", ok: false}
+            ]
+        }
+    };
 
-    // INIT
-    function init() {
+    // --- STATO ---
+    let currentLvlIdx = 0;
+    let grid = []; // Matrice oggetti
+    let zally = {x:0, y:0};
+    let isLocked = true; // Input bloccato
+
+    // --- INIZIALIZZAZIONE ---
+    function startGame() {
+        document.getElementById('start-modal').style.display = 'none';
         loadLevel(0);
     }
 
     function loadLevel(idx) {
-        if (idx >= LEVELS.length) {
-            finishGame();
+        if(idx >= LEVELS.length) {
+            alert("Training Completato! Sei un Gemini Champion!");
             return;
         }
-
-        const data = LEVELS[idx];
+        currentLvlIdx = idx;
+        const lvl = LEVELS[idx];
         
-        // Reset Visuals
-        document.getElementById('feedback-ui').style.display = 'none';
-        document.getElementById('error-ui').style.display = 'none';
-        document.getElementById('flow-left').style.width = '0%';
-        document.getElementById('flow-right').style.width = '0%';
-        document.getElementById('center-node').className = 'node broken';
-        document.getElementById('status-icon').innerText = '⚠️';
-        document.getElementById('zally-img').className = 'zally-avatar'; // Reset animation
+        document.getElementById('lvl-num').innerText = lvl.id;
+        document.getElementById('task-name').innerText = lvl.name;
         
-        // Set Text
-        document.getElementById('status-label').innerText = "BLOCCO";
-        document.getElementById('status-desc').innerText = data.desc;
-        document.getElementById('problem-text').innerText = data.problem;
-
-        // Progress Bar
-        document.getElementById('progress').style.width = ((idx) / LEVELS.length * 100) + '%';
+        createGrid(lvl);
+        isLocked = false;
+        zally = {x:0, y:0};
+        updateCursor();
     }
 
-    function checkAnswer(tool) {
-        const data = LEVELS[currentLevelIdx];
+    function createGrid(lvl) {
+        const board = document.getElementById('game-board');
+        // Rimuovi tutto tranne il cursore
+        while(board.firstChild) { 
+            if(board.firstChild.id === 'cursor') break; 
+            board.removeChild(board.firstChild); 
+        }
+        // Riaggiungi cursore se perso (safety) o pulisci resto
+        board.innerHTML = '<div id="cursor" class="cursor"></div>';
+        
+        grid = [];
 
-        if (tool === data.correct) {
-            successSequence(data);
-        } else {
-            showError(data.errorHint);
+        for(let y=0; y<ROWS; y++) {
+            let row = [];
+            for(let x=0; x<COLS; x++) {
+                const cellType = lvl.map[y][x];
+                
+                // Crea Elemento DOM
+                const el = document.createElement('div');
+                el.className = 'tile';
+                
+                // Crea Struttura Dati
+                let tile = {
+                    x, y,
+                    type: cellType, // 1=I, 2=L, 3=T
+                    conns: [0,0,0,0], // N E S W
+                    rotation: 0, // 0-3
+                    isGlitch: false,
+                    isFixed: true,
+                    el: el
+                };
+
+                // Setup visivo
+                if (cellType !== 0) {
+                    renderPipe(tile, cellType);
+                    
+                    // Controlla se è un glitch
+                    if (lvl.glitches.some(g => g.x === x && g.y === y)) {
+                        tile.isGlitch = true;
+                        tile.isFixed = false;
+                        el.classList.add('glitch');
+                    }
+                    if (cellType === 4) el.classList.add('start');
+                    if (cellType === 5) el.classList.add('end');
+                    
+                    // Random rotazione iniziale (tranne start/end)
+                    if(cellType !== 4 && cellType !== 5) {
+                         const r = Math.floor(Math.random() * 4);
+                         for(let i=0; i<r; i++) rotateLogic(tile);
+                    } else {
+                        // Start punta a Est, End riceve da Ovest
+                        if(cellType===4) tile.conns = [0,1,0,0]; 
+                        if(cellType===5) tile.conns = [0,0,0,1];
+                    }
+                }
+                
+                updatePipeVisuals(tile);
+                board.appendChild(el);
+                row.push(tile);
+            }
+            grid.push(row);
         }
     }
 
-    function successSequence(data) {
-        // 1. Animate visual fix
-        const center = document.getElementById('center-node');
-        center.className = 'node fixed';
-        document.getElementById('status-icon').innerText = '✅';
-        document.getElementById('status-label').innerText = "RISOLTO";
-        document.getElementById('status-desc').innerText = "Con " + getToolName(data.correct);
+    // --- LOGICA TUBI ---
+    
+    function renderPipe(tile, typeIdx) {
+        // Mappa ID mappa -> Tipo Logico
+        let baseConns = [0,0,0,0];
+        if (typeIdx === 1) baseConns = [...PIPES.STRAIGHT];
+        if (typeIdx === 2) baseConns = [...PIPES.ELBOW];
+        if (typeIdx === 3) baseConns = [...PIPES.TEE];
+        if (typeIdx === 4) baseConns = [...PIPES.START];
+        if (typeIdx === 5) baseConns = [...PIPES.END];
 
-        // Zally Happy Animation
-        document.getElementById('zally-img').className = 'zally-avatar happy';
+        tile.conns = baseConns;
 
-        // 2. Animate flow
-        document.getElementById('flow-left').style.width = '100%';
-        
-        setTimeout(() => {
-            document.getElementById('flow-right').style.width = '100%';
-        }, 800);
-
-        // 3. Show Feedback Modal
-        setTimeout(() => {
-            document.getElementById('feedback-msg').innerHTML = data.feedback;
-            document.getElementById('feedback-ui').style.display = 'flex';
-        }, 1800);
-    }
-
-    function showError(hint) {
-        document.getElementById('error-msg').innerText = hint;
-        document.getElementById('error-ui').style.display = 'flex';
-    }
-
-    function hideError() {
-        document.getElementById('error-ui').style.display = 'none';
-    }
-
-    function nextLevel() {
-        currentLevelIdx++;
-        loadLevel(currentLevelIdx);
-    }
-
-    function getToolName(tool) {
-        if(tool === 'smartfill') return "Smart Fill";
-        if(tool === 'formula') return "Formule AI";
-        if(tool === 'chart') return "Grafici AI";
-    }
-
-    function finishGame() {
-        document.body.innerHTML = `
-            <div style="text-align:center; font-family:'Roboto'; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh;">
-                <img src="zally-water.jpg" style="width:150px; height:150px; border-radius:50%; border:5px solid #4caf50; margin-bottom:20px; box-shadow:0 10px 20px rgba(0,0,0,0.1);">
-                <h1 style="color:#ff6900; font-size:3rem; margin:0;">TRAINING COMPLETATO!</h1>
-                <p style="font-size:1.5rem; color:#333; max-width:600px; margin-top:20px;">
-                    "Ottimo lavoro Team! Ora sapete esattamente quale strumento Gemini usare per sbloccare il flusso dei dati."
-                </p>
-                <div style="font-size:3rem; margin-top:30px;">🚀</div>
+        // Costruisci HTML interno (Bracci + Giunto + Acqua)
+        tile.el.innerHTML = `
+            <div class="pipe-container">
+                <div class="joint"></div>
+                <div class="water center"></div>
+                <!-- Bracci -->
+                <div class="arm north" style="display:none"></div>
+                <div class="water north"></div>
+                
+                <div class="arm east" style="display:none"></div>
+                <div class="water east"></div>
+                
+                <div class="arm south" style="display:none"></div>
+                <div class="water south"></div>
+                
+                <div class="arm west" style="display:none"></div>
+                <div class="water west"></div>
             </div>
         `;
     }
 
-    // Start
-    init();
+    function rotateLogic(tile) {
+        // Sposta array: [N,E,S,W] -> [W,N,E,S] (Rotazione Oraria)
+        tile.conns.unshift(tile.conns.pop());
+        tile.rotation = (tile.rotation + 1) % 4;
+    }
+
+    function updatePipeVisuals(tile) {
+        if (tile.type === 0) return;
+        
+        // Invece di ruotare tutto il div, mostriamo/nascondiamo i bracci in base a .conns
+        // Questo è necessario perché i bracci hanno ombre realistiche fisse
+        const c = tile.conns; // [N, E, S, W]
+        const pc = tile.el.querySelector('.pipe-container');
+        
+        // Reset display
+        pc.querySelector('.arm.north').style.display = c[0] ? 'block' : 'none';
+        pc.querySelector('.arm.east').style.display  = c[1] ? 'block' : 'none';
+        pc.querySelector('.arm.south').style.display = c[2] ? 'block' : 'none';
+        pc.querySelector('.arm.west').style.display  = c[3] ? 'block' : 'none';
+        
+        // Se glitch, togli la classe se fixato
+        if(!tile.isGlitch && tile.el.classList.contains('glitch')) {
+            tile.el.classList.remove('glitch');
+            // Flash effect
+            tile.el.style.filter = "brightness(1.5)";
+            setTimeout(() => tile.el.style.filter = "none", 200);
+        }
+    }
+
+    // --- INPUT ---
+    document.addEventListener('keydown', (e) => {
+        if(isLocked) return;
+        
+        const key = e.key;
+        if(key === 'ArrowUp' && zally.y > 0) zally.y--;
+        if(key === 'ArrowDown' && zally.y < ROWS-1) zally.y++;
+        if(key === 'ArrowLeft' && zally.x > 0) zally.x--;
+        if(key === 'ArrowRight' && zally.x < COLS-1) zally.x++;
+        
+        updateCursor();
+
+        if(key === ' ') { // Space: Ruota
+            const t = grid[zally.y][zally.x];
+            if(t.type !== 0 && t.type !== 4 && t.type !== 5 && t.isFixed) {
+                rotateLogic(t);
+                updatePipeVisuals(t);
+            }
+        }
+
+        if(key === 'Enter') { // Gemini
+            const t = grid[zally.y][zally.x];
+            if(t.isGlitch) openGemini(t);
+        }
+
+        if(key === 'f' || key === 'F') checkFlow();
+    });
+
+    function updateCursor() {
+        const c = document.getElementById('cursor');
+        c.style.transform = `translate(${zally.x * 104}px, ${zally.y * 104}px)`; // 100px + 4px gap
+    }
+
+    // --- GEMINI LOGIC ---
+    function openGemini(tile) {
+        isLocked = true;
+        const lvl = LEVELS[currentLvlIdx];
+        const data = QUIZ[lvl.task];
+        
+        document.getElementById('gemini-q').innerText = data.q;
+        const opts = document.getElementById('gemini-opts');
+        opts.innerHTML = '';
+        
+        data.opts.forEach(o => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-btn';
+            btn.innerText = o.t;
+            btn.onclick = () => {
+                if(o.ok) {
+                    tile.isGlitch = false;
+                    tile.isFixed = true;
+                    updatePipeVisuals(tile);
+                    document.getElementById('gemini-modal').style.display = 'none';
+                    isLocked = false;
+                } else {
+                    alert("Soluzione errata! Riprova.");
+                }
+            };
+            opts.appendChild(btn);
+        });
+        
+        document.getElementById('gemini-modal').style.display = 'block';
+    }
+
+    // --- FLOW LOGIC ---
+    function checkFlow() {
+        // Reset acqua
+        document.querySelectorAll('.water').forEach(el => el.classList.remove('active'));
+        
+        // BFS per trovare il percorso
+        let queue = [{x:0, y:0}];
+        let visited = new Set(['0,0']);
+        let endReached = false;
+        
+        // Attiva acqua Start
+        activateWater(0,0);
+
+        // Simulazione ritardata per effetto "scorrimento"
+        let step = 0;
+        
+        function processQueue() {
+            let nextQueue = [];
+            if(queue.length === 0) return;
+
+            queue.forEach(curr => {
+                const t = grid[curr.y][curr.x];
+                
+                // Controlla 4 direzioni
+                const dirs = [
+                    {dx:0, dy:-1, outIdx:0, inIdx:2}, // N
+                    {dx:1, dy:0,  outIdx:1, inIdx:3}, // E
+                    {dx:0, dy:1,  outIdx:2, inIdx:0}, // S
+                    {dx:-1, dy:0, outIdx:3, inIdx:1}  // W
+                ];
+
+                dirs.forEach(d => {
+                    // Se tubo corrente esce in questa direzione
+                    if(t.conns[d.outIdx]) {
+                        const nx = curr.x + d.dx;
+                        const ny = curr.y + d.dy;
+                        
+                        if(nx>=0 && nx<COLS && ny>=0 && ny<ROWS) {
+                            const nextT = grid[ny][nx];
+                            // Se vicino accetta e non è glitch
+                            if(nextT.type !== 0 && !nextT.isGlitch && nextT.conns[d.inIdx]) {
+                                const key = `${nx},${ny}`;
+                                if(!visited.has(key)) {
+                                    visited.add(key);
+                                    nextQueue.push({x:nx, y:ny});
+                                    setTimeout(() => activateWater(nx, ny), step * 200);
+                                    if(nextT.type === 5) endReached = true;
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+            step++;
+            queue = nextQueue;
+            if(queue.length > 0) {
+                setTimeout(processQueue, 200);
+            } else {
+                if(endReached) setTimeout(() => document.getElementById('win-modal').style.display='block', step*200 + 500);
+            }
+        }
+        
+        processQueue();
+    }
+
+    function activateWater(x, y) {
+        const t = grid[y][x];
+        const pc = t.el.querySelector('.pipe-container');
+        pc.querySelectorAll('.water').forEach(w => w.classList.add('active'));
+    }
+
+    function nextLevel() {
+        document.getElementById('win-modal').style.display = 'none';
+        loadLevel(currentLvlIdx + 1);
+    }
 
 </script>
 </body>
