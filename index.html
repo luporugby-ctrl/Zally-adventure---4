@@ -32,7 +32,7 @@
         /* HEADER */
         header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         h1 {
@@ -58,7 +58,7 @@
             justify-content: center;
             width: 90%;
             max-width: 1000px;
-            margin-bottom: 50px;
+            margin-bottom: 40px;
             position: relative;
         }
 
@@ -67,16 +67,16 @@
             border: 3px solid #ccc;
             border-radius: 15px;
             padding: 20px;
-            width: 180px;
+            width: 160px;
             text-align: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             z-index: 2;
             transition: all 0.3s;
         }
 
-        .node-icon { font-size: 3rem; margin-bottom: 10px; display: block; }
-        .node-label { font-weight: bold; font-size: 0.9rem; color: #555; text-transform: uppercase; }
-        .node-desc { font-size: 0.8rem; color: #888; margin-top: 5px; }
+        .node-icon { font-size: 2.5rem; margin-bottom: 10px; display: block; }
+        .node-label { font-weight: bold; font-size: 0.8rem; color: #555; text-transform: uppercase; }
+        .node-desc { font-size: 0.75rem; color: #888; margin-top: 5px; }
 
         .pipe {
             height: 12px;
@@ -105,21 +105,74 @@
             transition: width 1.5s ease-out;
         }
 
-        /* INTERACTION AREA */
-        .controls-area {
+        /* INTERACTION AREA WITH ZALLY */
+        .interaction-wrapper {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            width: 90%;
+            max-width: 800px;
+            gap: 20px;
+        }
+
+        /* ZALLY AVATAR STYLE */
+        .zally-container {
+            flex-shrink: 0;
             text-align: center;
+            width: 150px;
+        }
+
+        .zally-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 5px solid var(--zalando-orange);
+            object-fit: cover;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            background: white;
+            transition: transform 0.3s;
+        }
+
+        .zally-avatar.happy {
+            transform: translateY(-10px) scale(1.1);
+            border-color: var(--success);
+        }
+
+        .zally-name {
+            font-weight: 900;
+            color: var(--zalando-black);
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+
+        .controls-area {
             background: white;
             padding: 30px;
             border-radius: 20px;
+            border-top-left-radius: 0; /* Speech bubble effect */
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            width: 80%;
-            max-width: 600px;
+            flex-grow: 1;
+            position: relative;
+        }
+
+        /* Little triangle for speech bubble */
+        .controls-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -20px;
+            width: 0;
+            height: 0;
+            border-top: 20px solid white;
+            border-left: 20px solid transparent;
         }
 
         .problem-statement {
             font-size: 1.2rem;
             margin-bottom: 25px;
             font-weight: 500;
+            line-height: 1.5;
+            color: #444;
         }
 
         .tools-grid {
@@ -132,13 +185,13 @@
             background: white;
             border: 2px solid #ddd;
             border-radius: 10px;
-            padding: 20px 10px;
+            padding: 15px 5px;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .tool-btn:hover {
@@ -147,20 +200,21 @@
             transform: translateY(-3px);
         }
 
-        .tool-btn span { font-size: 2rem; }
-        .tool-btn strong { color: var(--zalando-black); font-size: 0.9rem; }
+        .tool-btn span { font-size: 1.8rem; }
+        .tool-btn strong { color: var(--zalando-black); font-size: 0.8rem; }
 
         /* SUCCESS MODAL / FEEDBACK */
         .feedback-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.95);
+            background: rgba(255,255,255,0.98);
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             border-radius: 20px;
             animation: fadeIn 0.3s;
+            z-index: 10;
         }
 
         .feedback-icon { font-size: 4rem; color: var(--success); margin-bottom: 10px; }
@@ -177,7 +231,10 @@
             font-size: 1rem;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(255, 105, 0, 0.4);
+            transition: transform 0.2s;
         }
+        
+        .next-btn:hover { transform: scale(1.05); }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -190,6 +247,13 @@
             background: var(--zalando-orange);
             width: 0%;
             transition: width 0.5s;
+        }
+
+        @media (max-width: 700px) {
+            .interaction-wrapper { flex-direction: column; align-items: center; }
+            .controls-area { border-radius: 20px; width: 100%; box-sizing: border-box; }
+            .controls-area::before { display: none; } /* Hide speech bubble arrow on mobile */
+            .pipeline-container { transform: scale(0.8); width: 100%; }
         }
 
     </style>
@@ -207,7 +271,7 @@
         <div class="node">
             <span class="node-icon">📂</span>
             <div class="node-label">INPUT</div>
-            <div class="node-desc">Dati Grezzi (CSV/Excel)</div>
+            <div class="node-desc">Dati Grezzi</div>
         </div>
 
         <!-- Pipe 1 -->
@@ -236,48 +300,59 @@
     </div>
 
     <!-- INTERACTION AREA -->
-    <div class="controls-area">
-        <div id="game-ui">
-            <div class="problem-statement" id="problem-text">
-                Caricamento scenario...
-            </div>
-
-            <div class="tools-grid">
-                <button class="tool-btn" onclick="checkAnswer('smartfill')">
-                    <span>✨</span>
-                    <strong>Smart Fill</strong>
-                </button>
-                <button class="tool-btn" onclick="checkAnswer('formula')">
-                    <span>➗</span>
-                    <strong>Genera Formula</strong>
-                </button>
-                <button class="tool-btn" onclick="checkAnswer('chart')">
-                    <span>📈</span>
-                    <strong>Crea Grafico</strong>
-                </button>
-            </div>
-        </div>
-
-        <!-- Feedback Overlay (Hidden by default) -->
-        <div class="feedback-overlay" id="feedback-ui">
-            <div class="feedback-icon">✅</div>
-            <div class="feedback-title">OTTIMO LAVORO!</div>
-            <div class="feedback-text" id="feedback-msg">
-                Gemini ha risolto il problema.
-            </div>
-            <button class="next-btn" onclick="nextLevel()">PROSSIMO STEP ➔</button>
-        </div>
+    <div class="interaction-wrapper">
         
-        <!-- Error Overlay -->
-        <div class="feedback-overlay" id="error-ui" style="background:rgba(255,255,255,0.95);">
-            <div class="feedback-icon" style="color:var(--error)">⚠️</div>
-            <div class="feedback-title">NON PROPRIO...</div>
-            <div class="feedback-text" id="error-msg">
-                Questa funzione non è ideale qui.
-            </div>
-            <button class="next-btn" style="background:#555" onclick="hideError()">RIPROVA</button>
+        <!-- Zally Character -->
+        <div class="zally-container">
+            <!-- NOTA: Assicurati che 'zally-water.jpg' sia nella stessa cartella -->
+            <img src="zally-water.jpg" class="zally-avatar" id="zally-img" alt="Zally Avatar">
+            <div class="zally-name">Zally</div>
         </div>
 
+        <!-- Game Controls -->
+        <div class="controls-area">
+            <div id="game-ui">
+                <div class="problem-statement" id="problem-text">
+                    Caricamento scenario...
+                </div>
+
+                <div class="tools-grid">
+                    <button class="tool-btn" onclick="checkAnswer('smartfill')">
+                        <span>✨</span>
+                        <strong>Smart Fill</strong>
+                    </button>
+                    <button class="tool-btn" onclick="checkAnswer('formula')">
+                        <span>➗</span>
+                        <strong>Genera Formula</strong>
+                    </button>
+                    <button class="tool-btn" onclick="checkAnswer('chart')">
+                        <span>📈</span>
+                        <strong>Crea Grafico</strong>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Feedback Overlay (Hidden by default) -->
+            <div class="feedback-overlay" id="feedback-ui">
+                <div class="feedback-icon">✅</div>
+                <div class="feedback-title">OTTIMO LAVORO!</div>
+                <div class="feedback-text" id="feedback-msg">
+                    Gemini ha risolto il problema.
+                </div>
+                <button class="next-btn" onclick="nextLevel()">PROSSIMO STEP ➔</button>
+            </div>
+            
+            <!-- Error Overlay -->
+            <div class="feedback-overlay" id="error-ui" style="background:rgba(255,255,255,0.95);">
+                <div class="feedback-icon" style="color:var(--error)">⚠️</div>
+                <div class="feedback-title">NON PROPRIO...</div>
+                <div class="feedback-text" id="error-msg">
+                    Questa funzione non è ideale qui.
+                </div>
+                <button class="next-btn" style="background:#555" onclick="hideError()">RIPROVA</button>
+            </div>
+
+        </div>
     </div>
 
     <div class="progress-bar" id="progress"></div>
@@ -289,28 +364,28 @@
             id: 1,
             title: "Dati Disordinati",
             desc: "indirizzi confusi",
-            problem: "Hai una colonna con 'Nome - Città - CAP' tutto mischiato. Devi separarli in colonne pulite.",
+            problem: "Ehi! Ho ricevuto un file fornitori ma la colonna indirizzo è un disastro: 'Nome - Città - CAP' tutto mischiato. Come faccio a separarli velocemente?",
             correct: 'smartfill',
-            feedback: "<strong>Smart Fill (Riconoscimento Pattern)</strong> è perfetto qui. <br><br>Invece di scrivere formule di testo complesse, fai un esempio a Gemini e lui capisce il modello per riempire il resto.",
-            errorHint: "Le formule sono troppo complicate per questo. C'è un modo più 'intelligente' che impara dai tuoi esempi."
+            feedback: "<strong>Smart Fill (Riconoscimento Pattern)</strong> è perfetto qui! <br><br>Invece di impazzire con le formule di testo, fai un esempio a Gemini e lui capisce il modello per riempire tutte le altre righe.",
+            errorHint: "Mmh, le formule sono troppo complicate per questo. C'è un modo più 'smart' che impara dai tuoi esempi."
         },
         {
             id: 2,
             title: "Calcolo Mancante",
             desc: "mancano i totali",
-            problem: "Devi calcolare il 'Totale Vendite' moltiplicando Prezzo x Quantità, ma solo se lo Status è 'Spedito'.",
+            problem: "Ho bisogno di calcolare il 'Totale Vendite' (Prezzo x Quantità), ma devo includere SOLO gli ordini con Status 'Spedito'. Non ricordo la formula...",
             correct: 'formula',
-            feedback: "<strong>Generazione Formule</strong> è la risposta. <br><br>Puoi chiedere a Gemini: <em>'Calcola il totale se la colonna E dice Spedito'</em>. Non serve ricordare la sintassi =SUMIF o =IF.",
-            errorHint: "Smart Fill non fa calcoli matematici condizionali. Ti serve una funzione logica."
+            feedback: "<strong>Generazione Formule</strong> è la risposta! <br><br>Puoi chiedere a Gemini: <em>'Calcola il totale se la colonna E dice Spedito'</em>. Lui scriverà la funzione =SUMIF corretta per te.",
+            errorHint: "Smart Fill non fa calcoli matematici condizionali. Ti serve una funzione logica, ma non devi scriverla tu!"
         },
         {
             id: 3,
             title: "Report Urgente",
             desc: "foglio di numeri",
-            problem: "Il tuo capo vuole vedere a colpo d'occhio quale Brand sta vendendo di più. Hai solo una tabella enorme.",
+            problem: "Il capo vuole vedere SUBITO quale Brand sta vendendo di più. Ho solo questa tabella piena di numeri e non ho tempo per le Pivot.",
             correct: 'chart',
-            feedback: "<strong>Creazione Grafici</strong> è immediata. <br><br>Basta chiedere <em>'Crea un grafico a barre per vendite per Brand'</em> e Gemini lo genera istantaneamente, risparmiandoti 10 click.",
-            errorHint: "Una formula ti darebbe un numero, ma il capo vuole *vedere* il risultato (Visualizzazione)."
+            feedback: "<strong>Creazione Grafici</strong> ci salva la vita. <br><br>Basta chiedere <em>'Crea un grafico a barre per vendite per Brand'</em> e Gemini lo genera istantaneamente. Report salvato!",
+            errorHint: "Una formula ti darebbe un numero, ma il capo vuole *vedere* il risultato a colpo d'occhio. Serve qualcosa di visivo."
         }
     ];
 
@@ -336,6 +411,7 @@
         document.getElementById('flow-right').style.width = '0%';
         document.getElementById('center-node').className = 'node broken';
         document.getElementById('status-icon').innerText = '⚠️';
+        document.getElementById('zally-img').className = 'zally-avatar'; // Reset animation
         
         // Set Text
         document.getElementById('status-label').innerText = "BLOCCO";
@@ -363,6 +439,9 @@
         document.getElementById('status-icon').innerText = '✅';
         document.getElementById('status-label').innerText = "RISOLTO";
         document.getElementById('status-desc').innerText = "Con " + getToolName(data.correct);
+
+        // Zally Happy Animation
+        document.getElementById('zally-img').className = 'zally-avatar happy';
 
         // 2. Animate flow
         document.getElementById('flow-left').style.width = '100%';
@@ -400,10 +479,13 @@
 
     function finishGame() {
         document.body.innerHTML = `
-            <div style="text-align:center; font-family:'Roboto'">
-                <h1 style="color:#ff6900; font-size:3rem;">TRAINING COMPLETATO!</h1>
-                <p style="font-size:1.5rem; color:#333;">Ora sei pronto per usare Gemini in Sheets.</p>
-                <div style="font-size:5rem; margin-top:20px;">🚀</div>
+            <div style="text-align:center; font-family:'Roboto'; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh;">
+                <img src="zally-water.jpg" style="width:150px; height:150px; border-radius:50%; border:5px solid #4caf50; margin-bottom:20px; box-shadow:0 10px 20px rgba(0,0,0,0.1);">
+                <h1 style="color:#ff6900; font-size:3rem; margin:0;">TRAINING COMPLETATO!</h1>
+                <p style="font-size:1.5rem; color:#333; max-width:600px; margin-top:20px;">
+                    "Ottimo lavoro Team! Ora sapete esattamente quale strumento Gemini usare per sbloccare il flusso dei dati."
+                </p>
+                <div style="font-size:3rem; margin-top:30px;">🚀</div>
             </div>
         `;
     }
