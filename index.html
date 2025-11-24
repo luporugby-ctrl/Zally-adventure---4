@@ -3,694 +3,413 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zally's Data Flow: Training Edition</title>
+    <title>Zally's Pipeline Manager</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap');
 
         :root {
             --zalando-orange: #ff6900;
             --zalando-black: #1a1a1a;
             --gemini-blue: #4285f4;
-            --pipe-color: #555;
-            --water-color: #00bcd4;
-            --bg-color: #222;
-            --success-green: #4caf50;
+            --gemini-light: #e8f0fe;
+            --success: #4caf50;
+            --error: #e91e63;
+            --bg: #f5f5f5;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: white;
-            font-family: 'Press Start 2P', cursive; /* Retro font per titoli */
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
+            color: #333;
+        }
+
+        /* HEADER */
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--zalando-black);
+            font-size: 2.5rem;
             margin: 0;
-            overflow: hidden;
-        }
-
-        #game-container {
-            position: relative;
-            border: 4px solid var(--zalando-orange);
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            background: #111;
-        }
-
-        canvas {
-            display: block;
-        }
-
-        /* UI Overlay Superiore */
-        #ui-overlay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            display: flex;
-            justify-content: space-between;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .stat-box {
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px;
-            border: 2px solid white;
-            font-size: 12px;
             text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        /* Pulsante Azione Principale */
-        #action-bar {
-            margin-top: 15px;
+        h1 span { color: var(--zalando-orange); }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* PIPELINE VISUALIZATION */
+        .pipeline-container {
             display: flex;
-            gap: 20px;
             align-items: center;
+            justify-content: center;
+            width: 90%;
+            max-width: 1000px;
+            margin-bottom: 50px;
+            position: relative;
         }
 
-        .action-btn {
+        .node {
+            background: white;
+            border: 3px solid #ccc;
+            border-radius: 15px;
+            padding: 20px;
+            width: 180px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 2;
+            transition: all 0.3s;
+        }
+
+        .node-icon { font-size: 3rem; margin-bottom: 10px; display: block; }
+        .node-label { font-weight: bold; font-size: 0.9rem; color: #555; text-transform: uppercase; }
+        .node-desc { font-size: 0.8rem; color: #888; margin-top: 5px; }
+
+        .pipe {
+            height: 12px;
+            background: #ddd;
+            flex-grow: 1;
+            margin: 0 -10px; /* Overlap slightly */
+            position: relative;
+            z-index: 1;
+            transition: background 1s;
+        }
+
+        /* Active/Error States */
+        .node.broken { border-color: var(--error); box-shadow: 0 0 15px rgba(233, 30, 99, 0.3); }
+        .node.fixed { border-color: var(--success); border-width: 4px; }
+        
+        .pipe.flowing { background: var(--gemini-blue); }
+        
+        /* Animation for flow */
+        .flow-particle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: var(--gemini-blue);
+            transition: width 1.5s ease-out;
+        }
+
+        /* INTERACTION AREA */
+        .controls-area {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .problem-statement {
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .tool-btn {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 20px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tool-btn:hover {
+            border-color: var(--gemini-blue);
+            background: var(--gemini-light);
+            transform: translateY(-3px);
+        }
+
+        .tool-btn span { font-size: 2rem; }
+        .tool-btn strong { color: var(--zalando-black); font-size: 0.9rem; }
+
+        /* SUCCESS MODAL / FEEDBACK */
+        .feedback-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            animation: fadeIn 0.3s;
+        }
+
+        .feedback-icon { font-size: 4rem; color: var(--success); margin-bottom: 10px; }
+        .feedback-title { font-size: 1.5rem; color: var(--zalando-black); font-weight: 900; margin-bottom: 10px; }
+        .feedback-text { max-width: 80%; text-align: center; color: #555; line-height: 1.6; margin-bottom: 20px; }
+        
+        .next-btn {
             background: var(--zalando-orange);
             color: white;
-            border: 4px solid #fff;
-            padding: 15px 30px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 14px;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1rem;
             cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 4px 0 #b34a00;
-            transition: transform 0.1s;
-        }
-        
-        .action-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 #b34a00;
+            box-shadow: 0 4px 10px rgba(255, 105, 0, 0.4);
         }
 
-        .action-btn.gemini {
-            background: var(--gemini-blue);
-            box-shadow: 0 4px 0 #2a5db0;
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Finestre Modali (Istruzioni, Quiz) */
-        .modal {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--zalando-black);
-            border: 4px solid white;
-            padding: 30px;
-            text-align: center;
-            max-width: 90%;
-            width: 500px;
-            display: none;
-            z-index: 100;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            font-family: 'Roboto', sans-serif; /* Font più leggibile per testi lunghi */
-        }
-
-        .modal h2 {
-            font-family: 'Press Start 2P', cursive;
-            color: var(--zalando-orange);
-            margin-top: 0;
-            font-size: 18px;
-            line-height: 1.5;
-        }
-
-        .modal p {
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            color: #ddd;
-        }
-
-        .modal .tutorial-keys {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 10px;
-        }
-
-        .key-badge {
-            background: #444;
-            padding: 10px;
-            border-radius: 5px;
-            border-bottom: 3px solid #222;
-        }
-
-        /* Stile Quiz Gemini */
-        #gemini-ui {
-            background: white;
-            color: black;
-            border-color: var(--gemini-blue);
-        }
-        
-        #gemini-ui h2 { color: var(--gemini-blue); }
-        #gemini-ui p { color: #333; font-weight: bold; }
-
-        .quiz-option {
-            background: #f0f4f8;
-            padding: 15px;
-            margin: 10px 0;
-            border: 2px solid #d1d9e6;
-            cursor: pointer;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.2s;
-            text-align: left;
-        }
-
-        .quiz-option:hover {
-            background: #e8f0fe;
-            border-color: var(--gemini-blue);
-        }
-
-        /* Mobile Controls */
-        #mobile-controls {
-            display: none;
-            margin-top: 10px;
-            gap: 5px;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 100%;
-            max-width: 400px;
-        }
-        
-        @media (max-width: 800px) {
-            #mobile-controls { display: flex; }
-            canvas { width: 100%; height: auto; }
-            .action-btn { padding: 10px; font-size: 10px; }
-            h1 { font-size: 14px; }
-        }
-
-        .d-pad-btn {
-            width: 50px;
-            height: 50px;
-            background: #333;
-            border: 2px solid #555;
-            color: white;
-            font-size: 20px;
-            border-radius: 8px;
+        /* Progress Bar */
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 10px;
+            background: var(--zalando-orange);
+            width: 0%;
+            transition: width 0.5s;
         }
 
     </style>
 </head>
 <body>
 
-    <!-- Titolo -->
-    <h1 style="margin-bottom: 10px; color: var(--zalando-orange); text-shadow: 2px 2px 0 #000;">ZALLY OPS: PIPE TRAINING</h1>
+    <header>
+        <h1>Zally's <span>Pipeline</span></h1>
+        <div class="subtitle">Data Enablement Simulator</div>
+    </header>
 
-    <div id="game-container">
-        <canvas id="gameCanvas" width="600" height="600"></canvas>
+    <!-- THE PIPELINE -->
+    <div class="pipeline-container">
+        <!-- Start Node -->
+        <div class="node">
+            <span class="node-icon">📂</span>
+            <div class="node-label">INPUT</div>
+            <div class="node-desc">Dati Grezzi (CSV/Excel)</div>
+        </div>
+
+        <!-- Pipe 1 -->
+        <div class="pipe" id="pipe-left">
+            <div class="flow-particle" id="flow-left"></div>
+        </div>
+
+        <!-- Problem Node (Center) -->
+        <div class="node broken" id="center-node">
+            <span class="node-icon" id="status-icon">⚠️</span>
+            <div class="node-label" id="status-label">BLOCCO</div>
+            <div class="node-desc" id="status-desc">Errore nei dati</div>
+        </div>
+
+        <!-- Pipe 2 -->
+        <div class="pipe" id="pipe-right">
+            <div class="flow-particle" id="flow-right"></div>
+        </div>
+
+        <!-- End Node -->
+        <div class="node">
+            <span class="node-icon">📊</span>
+            <div class="node-label">OUTPUT</div>
+            <div class="node-desc">Report Pronto</div>
+        </div>
+    </div>
+
+    <!-- INTERACTION AREA -->
+    <div class="controls-area">
+        <div id="game-ui">
+            <div class="problem-statement" id="problem-text">
+                Caricamento scenario...
+            </div>
+
+            <div class="tools-grid">
+                <button class="tool-btn" onclick="checkAnswer('smartfill')">
+                    <span>✨</span>
+                    <strong>Smart Fill</strong>
+                </button>
+                <button class="tool-btn" onclick="checkAnswer('formula')">
+                    <span>➗</span>
+                    <strong>Genera Formula</strong>
+                </button>
+                <button class="tool-btn" onclick="checkAnswer('chart')">
+                    <span>📈</span>
+                    <strong>Crea Grafico</strong>
+                </button>
+            </div>
+        </div>
+
+        <!-- Feedback Overlay (Hidden by default) -->
+        <div class="feedback-overlay" id="feedback-ui">
+            <div class="feedback-icon">✅</div>
+            <div class="feedback-title">OTTIMO LAVORO!</div>
+            <div class="feedback-text" id="feedback-msg">
+                Gemini ha risolto il problema.
+            </div>
+            <button class="next-btn" onclick="nextLevel()">PROSSIMO STEP ➔</button>
+        </div>
         
-        <!-- UI In-Game -->
-        <div id="ui-overlay">
-            <div class="stat-box">LIVELLO: <span id="level-display">1</span></div>
-            <div class="stat-box" id="status-display">MODALITÀ COSTRUZIONE</div>
-        </div>
-
-        <!-- MODAL: Start / Istruzioni -->
-        <div id="start-modal" class="modal" style="display:block;">
-            <h2>BENVENUTO NEL TEAM OPS!</h2>
-            <p>Il nostro flusso di dati è interrotto. Dobbiamo connettere i dati grezzi (DATA) al Report finale.</p>
-            <p><strong>Come giocare:</strong></p>
-            <div class="tutorial-keys">
-                <div class="key-badge">FRECCE<br>Muovi Zally</div>
-                <div class="key-badge">SPAZIO<br>Ruota Tubo</div>
+        <!-- Error Overlay -->
+        <div class="feedback-overlay" id="error-ui" style="background:rgba(255,255,255,0.95);">
+            <div class="feedback-icon" style="color:var(--error)">⚠️</div>
+            <div class="feedback-title">NON PROPRIO...</div>
+            <div class="feedback-text" id="error-msg">
+                Questa funzione non è ideale qui.
             </div>
-            <p>Alcuni tubi sono <strong>ROSSI</strong> (bloccati). Vai sopra e premi <strong>INVIO</strong> per chiedere a Gemini come sbloccarli.</p>
-            <p>Non c'è fretta. Quando sei pronto, premi "APRI FLUSSO".</p>
-            <button class="action-btn" onclick="startGame()">INIZIA TRAINING</button>
+            <button class="next-btn" style="background:#555" onclick="hideError()">RIPROVA</button>
         </div>
 
-        <!-- MODAL: Gemini Quiz -->
-        <div id="gemini-ui" class="modal">
-            <h2>✨ AIUTO GEMINI</h2>
-            <p id="gemini-question">Domanda qui...</p>
-            <div id="gemini-options">
-                <!-- Opzioni inserite via JS -->
-            </div>
-        </div>
-
-        <!-- MODAL: Risultato -->
-        <div id="result-modal" class="modal">
-            <h2 id="result-title">TITOLO</h2>
-            <p id="result-msg">Messaggio</p>
-            <button id="result-btn" class="action-btn" onclick="nextLevel()">PROSSIMO</button>
-        </div>
     </div>
 
-    <!-- Barra Azioni -->
-    <div id="action-bar">
-        <button class="action-btn" onclick="checkGemini()" title="Usa su caselle rosse">✨ CHIEDI A GEMINI (INVIO)</button>
-        <button class="action-btn" onclick="testFlow()" style="background:var(--success-green); border-color:#fff;" title="Prova il flusso">💧 APRI FLUSSO (F)</button>
-    </div>
-
-    <!-- Controlli Mobile -->
-    <div id="mobile-controls">
-        <div style="width:100%; text-align:center; margin-bottom:5px;">
-            <button class="d-pad-btn" onclick="input('ArrowUp')">⬆️</button>
-        </div>
-        <div style="width:100%; text-align:center; margin-bottom:5px;">
-            <button class="d-pad-btn" onclick="input('ArrowLeft')">⬅️</button>
-            <button class="d-pad-btn" onclick="input('Space')">🔄</button>
-            <button class="d-pad-btn" onclick="input('ArrowRight')">➡️</button>
-        </div>
-        <div style="width:100%; text-align:center;">
-            <button class="d-pad-btn" onclick="input('ArrowDown')">⬇️</button>
-        </div>
-    </div>
+    <div class="progress-bar" id="progress"></div>
 
 <script>
-/**
- * ZALLY OPS TRAINING - LOGICA DI GIOCO SEMPLIFICATA
- */
+    // DATA: Scenario Definitions
+    const LEVELS = [
+        {
+            id: 1,
+            title: "Dati Disordinati",
+            desc: "indirizzi confusi",
+            problem: "Hai una colonna con 'Nome - Città - CAP' tutto mischiato. Devi separarli in colonne pulite.",
+            correct: 'smartfill',
+            feedback: "<strong>Smart Fill (Riconoscimento Pattern)</strong> è perfetto qui. <br><br>Invece di scrivere formule di testo complesse, fai un esempio a Gemini e lui capisce il modello per riempire il resto.",
+            errorHint: "Le formule sono troppo complicate per questo. C'è un modo più 'intelligente' che impara dai tuoi esempi."
+        },
+        {
+            id: 2,
+            title: "Calcolo Mancante",
+            desc: "mancano i totali",
+            problem: "Devi calcolare il 'Totale Vendite' moltiplicando Prezzo x Quantità, ma solo se lo Status è 'Spedito'.",
+            correct: 'formula',
+            feedback: "<strong>Generazione Formule</strong> è la risposta. <br><br>Puoi chiedere a Gemini: <em>'Calcola il totale se la colonna E dice Spedito'</em>. Non serve ricordare la sintassi =SUMIF o =IF.",
+            errorHint: "Smart Fill non fa calcoli matematici condizionali. Ti serve una funzione logica."
+        },
+        {
+            id: 3,
+            title: "Report Urgente",
+            desc: "foglio di numeri",
+            problem: "Il tuo capo vuole vedere a colpo d'occhio quale Brand sta vendendo di più. Hai solo una tabella enorme.",
+            correct: 'chart',
+            feedback: "<strong>Creazione Grafici</strong> è immediata. <br><br>Basta chiedere <em>'Crea un grafico a barre per vendite per Brand'</em> e Gemini lo genera istantaneamente, risparmiandoti 10 click.",
+            errorHint: "Una formula ti darebbe un numero, ma il capo vuole *vedere* il risultato (Visualizzazione)."
+        }
+    ];
 
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+    let currentLevelIdx = 0;
 
-// Configurazione
-const TILE_SIZE = 60;
-const COLS = 10;
-const ROWS = 10;
-
-// Asset Colori
-const COLORS = {
-    bg: '#111',
-    grid: '#222',
-    pipeNormal: '#555',
-    pipeWater: '#00bcd4',
-    glitch: '#e91e63', // Rosso per errori
-    zally: '#ff6900', // Arancione Zalando
-    start: '#4caf50',
-    end: '#ffeb3b'
-};
-
-// Stato del Gioco
-let level = 1;
-let zally = { x: 0, y: 0 };
-let grid = [];
-let isFlowing = false; // Se l'acqua sta scorrendo
-let gameActive = false;
-
-// DEFINIZIONE LIVELLI
-const LEVELS = [
-    {
-        id: 1,
-        title: "LIVELLO 1: PULIZIA DATI",
-        msg: "I dati dei fornitori sono sporchi! Usa Smart Fill per pulirli.",
-        glitchCount: 2, // Tubi bloccati da risolvere con Gemini
-        geminiTask: 'cleaning',
-        pipes: 'simple' // Layout semplice
-    },
-    {
-        id: 2,
-        title: "LIVELLO 2: FORMULE MAGICHE",
-        msg: "Mancano i totali. Chiedi a Gemini di creare la formula.",
-        glitchCount: 3,
-        geminiTask: 'formula',
-        pipes: 'medium'
-    },
-    {
-        id: 3,
-        title: "LIVELLO 3: ANALISI",
-        msg: "Il report è vuoto. Genera un grafico con Gemini.",
-        glitchCount: 4,
-        geminiTask: 'chart',
-        pipes: 'complex'
+    // INIT
+    function init() {
+        loadLevel(0);
     }
-];
 
-// DOMANDE GEMINI (Training Content)
-const QUIZ_DB = {
-    cleaning: {
-        q: "Hai una colonna con 'Berlino, DE' e 'Parigi, FR'. Vuoi separare Città e Nazione. Che fai?",
-        opts: [
-            { txt: "Scrivo a mano ogni cella (Lento)", correct: false },
-            { txt: "Uso Smart Fill: faccio un esempio e Gemini completa il resto (Veloce!)", correct: true, feedback: "Esatto! Smart Fill riconosce i pattern." },
-            { txt: "Cerco una formula complessa su Google", correct: false }
-        ]
-    },
-    formula: {
-        q: "Devi sommare le vendite, ma solo se lo Status è 'Spedito'. Non ricordi la formula SUMIF.",
-        opts: [
-            { txt: "Prompt: 'Calcola somma vendite se status è Spedito'", correct: true, feedback: "Bravo! Gemini scrive la formula =SUMIF per te." },
-            { txt: "Provo a indovinare la formula a caso", correct: false },
-            { txt: "Uso la calcolatrice del telefono", correct: false }
-        ]
-    },
-    chart: {
-        q: "Il manager vuole vedere subito il brand che ha venduto di più.",
-        opts: [
-            { txt: "Creo una tabella pivot manuale", correct: false },
-            { txt: "Disegno il grafico su un foglio di carta", correct: false },
-            { txt: "Prompt: 'Crea un grafico a barre delle vendite per Brand'", correct: true, feedback: "Esatto! Il grafico appare all'istante." }
-        ]
-    }
-};
+    function loadLevel(idx) {
+        if (idx >= LEVELS.length) {
+            finishGame();
+            return;
+        }
 
-// --- MOTORE DI GIOCO ---
-
-// Tipi di Tubo (Nord, Est, Sud, Ovest) 1=Aperto, 0=Chiuso
-const PIPE_SHAPES = {
-    I: [1, 0, 1, 0], // Dritto
-    L: [1, 1, 0, 0], // Curva
-    T: [1, 1, 1, 0], // T
-    X: [1, 1, 1, 1], // Incrocio
-    S: [0, 1, 0, 0], // START (Verso destra)
-    E: [0, 0, 0, 1]  // END (Riceve da sinistra)
-};
-
-class Tile {
-    constructor(x, y, shapeType, isGlitch) {
-        this.x = x;
-        this.y = y;
-        this.shape = shapeType; 
-        this.conns = [...shapeType]; // Connessioni attuali [N,E,S,W]
-        this.isGlitch = isGlitch; // Se è un glitch (blocco rosso)
-        this.isFixed = !isGlitch; // Se è utilizzabile
-        this.hasWater = false;
+        const data = LEVELS[idx];
         
-        // Ruota casualmente all'inizio (tranne Start/End)
-        if (!this.isStart() && !this.isEnd()) {
-            let r = Math.floor(Math.random() * 4);
-            for(let i=0; i<r; i++) this.rotate(true);
-        }
-    }
-
-    rotate(force = false) {
-        if (!force && (!this.isFixed || this.isStart() || this.isEnd())) return;
-        // Shift array: [N, E, S, W] -> [W, N, E, S]
-        this.conns.unshift(this.conns.pop());
-    }
-
-    isStart() { return this.x === 0 && this.y === 0; }
-    isEnd() { return this.x === COLS-1 && this.y === ROWS-1; }
-}
-
-function initLevel(lvlIdx) {
-    const config = LEVELS[lvlIdx-1];
-    document.getElementById('level-display').innerText = config.id;
-    document.getElementById('status-display').innerText = "COSTRUZIONE";
-    document.getElementById('status-display').style.color = "white";
-    
-    grid = [];
-    zally = {x:0, y:0};
-    isFlowing = false;
-
-    // Generazione Griglia
-    for(let y=0; y<ROWS; y++) {
-        let row = [];
-        for(let x=0; x<COLS; x++) {
-            let type = PIPE_SHAPES.I;
-            let isGlitch = false;
-            
-            // Logica semplice generazione mappa
-            let r = Math.random();
-            if (r < 0.4) type = PIPE_SHAPES.L;
-            else if (r < 0.6) type = PIPE_SHAPES.T;
-            else if (r < 0.7) type = PIPE_SHAPES.X;
-
-            if (x===0 && y===0) type = PIPE_SHAPES.S;
-            else if (x===COLS-1 && y===ROWS-1) type = PIPE_SHAPES.E;
-            else {
-                // Aggiungi glitch casuali
-                if (Math.random() < (config.glitchCount / 100) * 3) isGlitch = true;
-            }
-            
-            row.push(new Tile(x, y, type, isGlitch));
-        }
-        grid.push(row);
-    }
-    // Forza orientamento Start
-    grid[0][0].conns = [0, 1, 0, 0];
-
-    draw();
-}
-
-// --- INPUT E CONTROLLI ---
-
-function input(key) {
-    if (!gameActive) return;
-    
-    // Movimento Zally
-    if (key === 'ArrowUp' && zally.y > 0) zally.y--;
-    if (key === 'ArrowDown' && zally.y < ROWS-1) zally.y++;
-    if (key === 'ArrowLeft' && zally.x > 0) zally.x--;
-    if (key === 'ArrowRight' && zally.x < COLS-1) zally.x++;
-
-    // Azioni
-    if (key === 'Space' || key === ' ') {
-        let t = grid[zally.y][zally.x];
-        t.rotate();
-    }
-    if (key === 'Enter') checkGemini();
-    if (key === 'f' || key === 'F') testFlow();
-
-    draw();
-}
-
-document.addEventListener('keydown', (e) => input(e.key));
-
-// --- LOGICA GEMINI ---
-
-function checkGemini() {
-    let t = grid[zally.y][zally.x];
-    if (t.isGlitch && !t.isFixed) {
-        openGeminiQuiz();
-    }
-}
-
-function openGeminiQuiz() {
-    gameActive = false; // Pausa input gioco
-    const config = LEVELS[level-1];
-    const data = QUIZ_DB[config.geminiTask];
-    
-    const ui = document.getElementById('gemini-ui');
-    document.getElementById('gemini-question').innerText = data.q;
-    const optsDiv = document.getElementById('gemini-options');
-    optsDiv.innerHTML = '';
-
-    data.opts.forEach(opt => {
-        let div = document.createElement('div');
-        div.className = 'quiz-option';
-        div.innerText = opt.txt;
-        div.onclick = () => solveGemini(opt.correct, opt.feedback);
-        optsDiv.appendChild(div);
-    });
-
-    ui.style.display = 'block';
-}
-
-function solveGemini(isCorrect, feedback) {
-    const ui = document.getElementById('gemini-ui');
-    
-    if (isCorrect) {
-        // Fix Tile
-        let t = grid[zally.y][zally.x];
-        t.isGlitch = false;
-        t.isFixed = true;
+        // Reset Visuals
+        document.getElementById('feedback-ui').style.display = 'none';
+        document.getElementById('error-ui').style.display = 'none';
+        document.getElementById('flow-left').style.width = '0%';
+        document.getElementById('flow-right').style.width = '0%';
+        document.getElementById('center-node').className = 'node broken';
+        document.getElementById('status-icon').innerText = '⚠️';
         
-        ui.style.display = 'none';
-        gameActive = true;
-        alert("✨ GEMINI: " + feedback); // Semplice feedback
-        draw();
-    } else {
-        alert("⚠️ Non è la soluzione migliore. Riprova!");
+        // Set Text
+        document.getElementById('status-label').innerText = "BLOCCO";
+        document.getElementById('status-desc').innerText = data.desc;
+        document.getElementById('problem-text').innerText = data.problem;
+
+        // Progress Bar
+        document.getElementById('progress').style.width = ((idx) / LEVELS.length * 100) + '%';
     }
-}
 
-// --- LOGICA FLUSSO ACQUA (SEMPLIFICATA) ---
+    function checkAnswer(tool) {
+        const data = LEVELS[currentLevelIdx];
 
-function testFlow() {
-    if (isFlowing) return; // Già attivo
-    
-    // Reset acqua
-    for(let y=0; y<ROWS; y++) 
-        for(let x=0; x<COLS; x++) grid[y][x].hasWater = false;
-
-    isFlowing = true;
-    document.getElementById('status-display').innerText = "TEST FLUSSO...";
-    document.getElementById('status-display').style.color = "#00bcd4";
-
-    // Simulazione passo-passo
-    let queue = [{x:0, y:0}];
-    grid[0][0].hasWater = true;
-
-    let timer = setInterval(() => {
-        let newFlow = false;
-        let nextQueue = [];
-
-        queue.forEach(curr => {
-            let t = grid[curr.y][curr.x];
-            // Controlla vicini [N, E, S, W]
-            const dirs = [
-                {x:0, y:-1, idx:0, opp:2}, // N
-                {x:1, y:0,  idx:1, opp:3}, // E
-                {x:0, y:1,  idx:2, opp:0}, // S
-                {x:-1, y:0, idx:3, opp:1}  // W
-            ];
-
-            dirs.forEach(d => {
-                // Se tubo corrente ha uscita in questa direzione
-                if (t.conns[d.idx]) {
-                    let nx = curr.x + d.x;
-                    let ny = curr.y + d.y;
-                    
-                    // Se vicino esiste
-                    if (nx>=0 && nx<COLS && ny>=0 && ny<ROWS) {
-                        let neighbor = grid[ny][nx];
-                        // Se vicino ha entrata opposta E non è glitch E non ha acqua
-                        if (neighbor.conns[d.opp] && !neighbor.isGlitch && !neighbor.hasWater) {
-                            neighbor.hasWater = true;
-                            nextQueue.push({x:nx, y:ny});
-                            newFlow = true;
-                        }
-                    }
-                }
-            });
-        });
-
-        queue = nextQueue;
-        draw();
-
-        // Controllo Fine o Blocco
-        let endTile = grid[ROWS-1][COLS-1];
-        if (endTile.hasWater) {
-            clearInterval(timer);
-            levelComplete(true);
-        } else if (!newFlow) {
-            clearInterval(timer);
-            levelComplete(false);
-        }
-    }, 200); // Velocità animazione
-}
-
-function levelComplete(success) {
-    isFlowing = false;
-    const modal = document.getElementById('result-modal');
-    const title = document.getElementById('result-title');
-    const msg = document.getElementById('result-msg');
-    const btn = document.getElementById('result-btn');
-
-    if (success) {
-        title.innerText = "MISSIONE COMPIUTA!";
-        title.style.color = "#4caf50";
-        msg.innerText = "Hai connesso i dati perfettamente grazie a Gemini!";
-        btn.innerText = "PROSSIMO LIVELLO";
-        btn.onclick = nextLevel;
-    } else {
-        title.innerText = "PERDITA RILEVATA!";
-        title.style.color = "#e91e63";
-        msg.innerText = "L'acqua non è arrivata al Report. Controlla le connessioni e riprova.";
-        btn.innerText = "RIPARA TUBI";
-        btn.onclick = () => {
-            modal.style.display = 'none';
-            document.getElementById('status-display').innerText = "COSTRUZIONE";
-            document.getElementById('status-display').style.color = "white";
-            // Pulisci acqua
-            for(let y=0; y<ROWS; y++) 
-                for(let x=0; x<COLS; x++) grid[y][x].hasWater = false;
-            draw();
-        };
-    }
-    modal.style.display = 'block';
-}
-
-function nextLevel() {
-    document.getElementById('result-modal').style.display = 'none';
-    level++;
-    if (level > LEVELS.length) {
-        alert("COMPLIMENTI! SEI UN GEMINI CHAMPION!");
-        level = 1;
-    }
-    initLevel(level);
-}
-
-// --- DISEGNO ---
-
-function draw() {
-    ctx.fillStyle = COLORS.bg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Disegna Griglia e Tubi
-    for(let y=0; y<ROWS; y++) {
-        for(let x=0; x<COLS; x++) {
-            drawTile(grid[y][x], x*TILE_SIZE, y*TILE_SIZE);
+        if (tool === data.correct) {
+            successSequence(data);
+        } else {
+            showError(data.errorHint);
         }
     }
 
-    // Disegna Zally
-    drawZally(zally.x*TILE_SIZE, zally.y*TILE_SIZE);
-}
+    function successSequence(data) {
+        // 1. Animate visual fix
+        const center = document.getElementById('center-node');
+        center.className = 'node fixed';
+        document.getElementById('status-icon').innerText = '✅';
+        document.getElementById('status-label').innerText = "RISOLTO";
+        document.getElementById('status-desc').innerText = "Con " + getToolName(data.correct);
 
-function drawTile(t, x, y) {
-    const cx = x + TILE_SIZE/2;
-    const cy = y + TILE_SIZE/2;
-    const w = TILE_SIZE/3;
+        // 2. Animate flow
+        document.getElementById('flow-left').style.width = '100%';
+        
+        setTimeout(() => {
+            document.getElementById('flow-right').style.width = '100%';
+        }, 800);
 
-    // Bordo cella
-    ctx.strokeStyle = '#333';
-    ctx.strokeRect(x,y,TILE_SIZE,TILE_SIZE);
-
-    if (t.isGlitch && !t.isFixed) {
-        // Cella Glitch (Rosso)
-        ctx.fillStyle = COLORS.glitch;
-        ctx.fillRect(x+5, y+5, TILE_SIZE-10, TILE_SIZE-10);
-        ctx.fillStyle = 'white';
-        ctx.font = '20px Arial';
-        ctx.fillText("?", cx-5, cy+7);
-        return;
+        // 3. Show Feedback Modal
+        setTimeout(() => {
+            document.getElementById('feedback-msg').innerHTML = data.feedback;
+            document.getElementById('feedback-ui').style.display = 'flex';
+        }, 1800);
     }
 
-    // Colore Tubo
-    ctx.fillStyle = t.hasWater ? COLORS.pipeWater : COLORS.pipeNormal;
-
-    // Centro
-    ctx.fillRect(cx - w/2, cy - w/2, w, w);
-    
-    // Bracci
-    if (t.conns[0]) ctx.fillRect(cx - w/2, y, w, TILE_SIZE/2); // N
-    if (t.conns[1]) ctx.fillRect(cx, cy - w/2, TILE_SIZE/2, w); // E
-    if (t.conns[2]) ctx.fillRect(cx - w/2, cy, w, TILE_SIZE/2); // S
-    if (t.conns[3]) ctx.fillRect(x, cy - w/2, TILE_SIZE/2, w); // W
-
-    // Etichette Start/End
-    if (t.isStart()) {
-        ctx.fillStyle = '#fff';
-        ctx.font = '10px Arial';
-        ctx.fillText("DATI", x+5, y+15);
+    function showError(hint) {
+        document.getElementById('error-msg').innerText = hint;
+        document.getElementById('error-ui').style.display = 'flex';
     }
-    if (t.isEnd()) {
-        ctx.fillStyle = '#fff';
-        ctx.font = '10px Arial';
-        ctx.fillText("REPORT", x+5, y+55);
+
+    function hideError() {
+        document.getElementById('error-ui').style.display = 'none';
     }
-}
 
-function drawZally(x, y) {
-    // Cursore Zally
-    ctx.strokeStyle = COLORS.zally;
-    ctx.lineWidth = 4;
-    ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
-    
-    // Sprite Semplice
-    ctx.fillStyle = COLORS.zally;
-    ctx.beginPath();
-    ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/2, 10, 0, Math.PI*2);
-    ctx.fill();
-}
+    function nextLevel() {
+        currentLevelIdx++;
+        loadLevel(currentLevelIdx);
+    }
 
-// Avvio
-function startGame() {
-    document.getElementById('start-modal').style.display = 'none';
-    gameActive = true;
-    initLevel(1);
-}
+    function getToolName(tool) {
+        if(tool === 'smartfill') return "Smart Fill";
+        if(tool === 'formula') return "Formule AI";
+        if(tool === 'chart') return "Grafici AI";
+    }
+
+    function finishGame() {
+        document.body.innerHTML = `
+            <div style="text-align:center; font-family:'Roboto'">
+                <h1 style="color:#ff6900; font-size:3rem;">TRAINING COMPLETATO!</h1>
+                <p style="font-size:1.5rem; color:#333;">Ora sei pronto per usare Gemini in Sheets.</p>
+                <div style="font-size:5rem; margin-top:20px;">🚀</div>
+            </div>
+        `;
+    }
+
+    // Start
+    init();
 
 </script>
 </body>
