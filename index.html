@@ -37,7 +37,7 @@
         /* MAIN LAYOUT */
         .main-container {
             display: flex;
-            gap: 20px;
+            gap: 30px;
             align-items: flex-start;
         }
 
@@ -45,71 +45,87 @@
         .sidebar {
             display: flex;
             flex-direction: column;
-            width: 280px;
+            width: 260px;
             gap: 20px;
         }
 
-        .title-box {
-            background: var(--zalando-orange);
-            color: white;
-            padding: 15px;
-            text-align: center;
+        /* ZALLY AVATAR SECTION */
+        .zally-profile {
+            background: var(--panel-bg);
             border: 4px solid #fff;
-            box-shadow: 4px 4px 0px #000;
-            line-height: 1.5;
-            font-size: 14px;
-            text-shadow: var(--text-shadow);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 6px 6px 0px #000;
         }
 
-        .status-panel {
-            background: var(--panel-bg);
-            border: 4px solid #555;
-            padding: 20px;
-            box-shadow: 4px 4px 0px #000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            text-align: center;
+        .zally-img-container {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px auto;
+            border: 4px solid var(--zalando-orange);
+            background: #000;
+            overflow: hidden;
         }
 
         .zally-avatar {
-            width: 100px;
-            height: 100px;
-            border: 4px solid white;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            background: #000;
             image-rendering: pixelated;
         }
 
-        .status-display {
-            font-size: 24px;
-            color: #555; /* Default off */
-            text-shadow: 2px 2px 0px #000;
-            margin: 10px 0;
+        .profile-name {
+            color: var(--zalando-orange);
+            font-size: 14px;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 0 #000;
         }
 
-        .status-display.active { color: var(--water-color); animation: pulse 1s infinite; }
-        .status-display.error { color: var(--danger-red); }
-        .status-display.success { color: var(--success-green); }
-
-        .stats-row {
-            font-size: 10px;
+        .profile-role {
             color: #aaa;
-            line-height: 1.8;
-            text-align: left;
-            width: 100%;
+            font-size: 10px;
         }
+
+        /* METRICS */
+        .metrics-box {
+            background: var(--panel-bg);
+            border: 4px solid #555;
+            padding: 15px;
+            box-shadow: 6px 6px 0px #000;
+        }
+
+        .metric-row {
+            margin-bottom: 15px;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: #888;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            color: #fff;
+        }
+
+        #flow-status {
+            color: #555; /* Default */
+        }
+        #flow-status.pumping { color: var(--water-color); animation: blink 0.5s infinite; }
+        #flow-status.success { color: var(--success-green); }
+        #flow-status.fail { color: var(--danger-red); }
 
         /* GAME GRID */
         #game-board {
             display: grid;
             grid-template-columns: repeat(8, 80px); 
-            grid-template-rows: repeat(7, 80px); /* Increased rows */
+            grid-template-rows: repeat(7, 80px);
             gap: 0;
             background: var(--grid-bg);
             border: 8px solid #555;
-            box-shadow: 10px 10px 0px #000;
+            box-shadow: 15px 15px 0px #000;
             position: relative;
         }
 
@@ -119,10 +135,10 @@
             height: 80px;
             position: relative;
             box-sizing: border-box;
-            border: 1px solid #222; /* Subtle grid */
+            border: 1px solid #1a1a1a;
         }
 
-        /* Pipe Segments (Pixel Art Style CSS) */
+        /* Pipe Graphics */
         .pipe-part {
             position: absolute;
             background: var(--pipe-color);
@@ -130,34 +146,30 @@
             z-index: 1;
         }
 
+        /* Geometria dei tubi */
         .center { top: 24px; left: 24px; width: 32px; height: 32px; z-index: 2; }
         .arm-n { top: -4px; left: 24px; width: 32px; height: 32px; border-bottom: none; }
         .arm-e { top: 24px; right: -4px; width: 32px; height: 32px; border-left: none; }
         .arm-s { bottom: -4px; left: 24px; width: 32px; height: 32px; border-top: none; }
         .arm-w { top: 24px; left: -4px; width: 32px; height: 32px; border-right: none; }
 
-        /* WATER (Hidden by default) */
-        .water {
+        /* Water Overlay (Only visible when .wet class is added) */
+        .water-layer {
             position: absolute;
             background: var(--water-color);
             z-index: 3;
-            transition: all 0.3s linear;
+            display: none; /* Hidden by default */
         }
-        
-        .w-center { top: 28px; left: 28px; width: 24px; height: 24px; transform: scale(0); }
-        .w-n { top: 0; left: 28px; width: 24px; height: 0; }
-        .w-e { top: 28px; left: 28px; width: 0; height: 24px; }
-        .w-s { top: 28px; left: 28px; width: 24px; height: 0; }
-        .w-w { top: 28px; left: 28px; width: 0; height: 24px; transform: translateX(0); } /* Will expand left */
 
-        /* Wet State */
-        .tile.wet .w-center { transform: scale(1); }
-        .tile.wet .w-n { height: 28px; }
-        .tile.wet .w-e { width: 56px; } 
-        .tile.wet .w-s { height: 56px; }
-        .tile.wet .w-w { width: 56px; transform: translateX(-28px); }
+        .tile.wet .water-layer { display: block; }
 
-        /* GLITCH STYLE */
+        .w-center { top: 28px; left: 28px; width: 24px; height: 24px; }
+        .w-n { top: 0; left: 28px; width: 24px; height: 28px; }
+        .w-e { top: 28px; left: 28px; width: 52px; height: 24px; }
+        .w-s { top: 28px; left: 28px; width: 24px; height: 52px; }
+        .w-w { top: 28px; left: 0; width: 28px; height: 24px; }
+
+        /* Glitch Style */
         .tile.glitch .pipe-part { background: var(--rust-color); border-color: #58130a; }
         .glitch-mark {
             position: absolute;
@@ -166,83 +178,60 @@
             font-size: 24px;
             z-index: 10;
             animation: bounce 1s infinite;
-            text-shadow: 2px 2px 0 #000;
         }
 
-        /* START / END LABELS */
+        /* Labels */
         .label {
             position: absolute;
-            font-size: 10px;
+            font-size: 8px;
             font-weight: bold;
-            color: #fff;
-            background: #000;
+            color: #000;
             padding: 2px 4px;
             z-index: 5;
+            top: 2px; left: 2px;
         }
-        .start-label { top: 5px; left: 5px; color: var(--success-green); }
-        .end-label { bottom: 5px; right: 5px; color: #f1c40f; }
+        .start-label { background: var(--success-green); }
+        .end-label { background: #f1c40f; }
 
-        /* CURSOR */
+        /* Cursor */
         #cursor {
             position: absolute;
             width: 80px; height: 80px;
             border: 4px solid var(--zalando-orange);
-            background: rgba(255, 105, 0, 0.2);
-            box-shadow: 0 0 15px var(--zalando-orange);
+            background: rgba(255, 105, 0, 0.1);
+            box-shadow: 0 0 10px var(--zalando-orange);
             z-index: 20;
             pointer-events: none;
             transition: transform 0.1s;
         }
 
-        /* MODALS */
+        /* Modals */
         .retro-modal {
             position: fixed;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            background: #0000aa; /* Retro Blue */
+            background: #0000aa;
             border: 4px solid #fff;
             padding: 25px;
             width: 500px;
             display: none;
             z-index: 100;
-            box-shadow: 15px 15px 0px rgba(0,0,0,0.8);
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.8);
             text-align: center;
         }
 
-        .retro-modal h2 {
-            background: #fff;
-            color: #0000aa;
-            margin: -25px -25px 20px -25px;
-            padding: 10px;
-            font-size: 16px;
-        }
-
+        .retro-modal h2 { background: #fff; color: #0000aa; margin: -25px -25px 20px -25px; padding: 10px; font-size: 14px; }
         .retro-modal p { line-height: 1.6; font-size: 12px; margin-bottom: 20px; }
 
         .btn-arcade {
-            display: block;
-            width: 100%;
-            background: #000;
-            color: white;
-            border: 2px solid white;
-            padding: 15px;
-            font-family: 'Press Start 2P';
-            font-size: 10px;
-            text-align: left;
-            cursor: pointer;
-            margin-bottom: 10px;
+            display: block; width: 100%; background: #000; color: white; border: 2px solid white; padding: 15px;
+            font-family: 'Press Start 2P'; font-size: 10px; text-align: left; cursor: pointer; margin-bottom: 10px;
         }
-        
-        .btn-arcade:hover { background: var(--gemini-blue); color: #fff; }
+        .btn-arcade:hover { background: var(--gemini-blue); }
 
-        .controls-hint {
-            margin-top: 15px;
-            font-size: 10px;
-            color: #777;
-            text-align: center;
-        }
+        .controls-hint { font-size: 10px; color: #777; margin-top: 15px; text-align: center; line-height: 1.8;}
 
-        @keyframes pulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes bounce { 0%, 100% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, -60%); } }
 
     </style>
@@ -253,28 +242,37 @@
         
         <!-- SIDEBAR -->
         <div class="sidebar">
-            <div class="title-box">
-                ZALLY'S DATA FLOW<br><br>
-                <span style="font-size:10px; color:#ddd;">PIPE MANIA CHALLENGE</span>
+            
+            <!-- ZALLY PROFILE -->
+            <div class="zally-profile">
+                <div class="zally-img-container">
+                    <img src="zally-water.jpg" class="zally-avatar" alt="Zally" onerror="this.src='https://via.placeholder.com/120/ff6900/ffffff?text=Z'">
+                </div>
+                <div class="profile-name">ZALLY OPS</div>
+                <div class="profile-role">PIPELINE ENGINEER</div>
             </div>
 
-            <div class="status-panel">
-                <img src="zally-water.jpg" class="zally-avatar" alt="Zally" onerror="this.src='https://via.placeholder.com/100/ff6900/ffffff?text=Z'">
-                
-                <div style="font-size:10px; text-transform:uppercase;">System Status</div>
-                <div id="status-text" class="status-display">OFFLINE</div>
-                
-                <div class="stats-row">
-                    PIPES FIXED: <span id="fixed-count" style="color:white">0</span> / 4<br>
-                    FLOW INTEGRITY: <span id="integrity" style="color:white">0%</span>
+            <!-- METRICS -->
+            <div class="metrics-box">
+                <div class="metric-row">
+                    <span class="metric-label">PIPES FIXED</span>
+                    <span class="metric-value"><span id="fixed-count">0</span> / 4</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">INTEGRITY</span>
+                    <span class="metric-value" id="integrity">0%</span>
+                </div>
+                <div class="metric-row" style="margin-bottom:0">
+                    <span class="metric-label">FLOW STATUS</span>
+                    <span class="metric-value" id="flow-status">OFFLINE</span>
                 </div>
             </div>
 
             <div class="controls-hint">
-                [ARROWS] MOVE<br><br>
-                [SPACE] ROTATE<br><br>
-                [ENTER] GEMINI AI<br><br>
-                [F] START FLOW
+                ARROWS: Move<br>
+                SPACE: Rotate<br>
+                ENTER: Gemini AI<br>
+                F: Start Flow
             </div>
         </div>
 
@@ -287,80 +285,56 @@
     </div>
 
     <!-- MODALS -->
-    
-    <!-- START -->
     <div id="modal-start" class="retro-modal" style="display:block">
         <h2>MISSION BRIEFING</h2>
         <p>
-            Welcome, Zally.<br><br>
-            The Ops Pipeline is broken in 4 critical sections. 
-            Data is leaking and the report cannot be generated.<br><br>
-            <strong>OBJECTIVE:</strong><br>
-            Traverse the grid. Identify rusty pipes (Glitches). 
-            Use <strong>GEMINI</strong> (Enter) to fix them and build a clear path from IN to OUT.
+            Welcome Zally.<br><br>
+            The pipeline is broken in 4 spots.<br>
+            Data cannot flow from IN to OUT.<br><br>
+            1. Find the rusty pipes (Glitches)<br>
+            2. Press ENTER to call Gemini<br>
+            3. Fix the pipe and rotate the path
         </p>
         <button class="btn-arcade" style="text-align:center" onclick="startGame()">>>> START SHIFT <<<</button>
     </div>
 
-    <!-- QUIZ -->
     <div id="modal-quiz" class="retro-modal">
         <h2 id="quiz-title">CHALLENGE</h2>
         <p id="quiz-desc">...</p>
         <div id="quiz-options"></div>
     </div>
 
-    <!-- WIN -->
     <div id="modal-win" class="retro-modal">
-        <h2 style="background:var(--success-green); color:white;">SYSTEM RESTORED</h2>
+        <h2 style="background:var(--success-green); color:white;">SYSTEM ONLINE</h2>
         <p>
-            GREAT JOB!<br><br>
-            You used Gemini to:<br>
-            1. Clean Data<br>
-            2. Generate Formulas<br>
-            3. Cross-Reference<br>
-            4. Visualize Results<br><br>
-            The Pipeline is now fully operational.
+            EXCELLENT WORK!<br><br>
+            The pipeline is fully operational.<br>
+            All data challenges resolved using Gemini.
         </p>
-        <button class="btn-arcade" style="text-align:center" onclick="location.reload()">PLAY AGAIN</button>
+        <button class="btn-arcade" style="text-align:center" onclick="location.reload()">NEXT REPORT</button>
     </div>
 
 <script>
-    // --- GAME CONFIGURATION ---
     const COLS = 8;
-    const ROWS = 7; // Increased height
+    const ROWS = 7;
     
-    // Pipe Definitions [N, E, S, W]
+    // Pipe Types: [North, East, South, West]
     const PIPES = {
         EMPTY: [0,0,0,0],
-        I: [1,0,1,0],     // Vertical
-        H: [0,1,0,1],     // Horizontal
+        I: [1,0,1,0],     
+        H: [0,1,0,1],     
         L_NE: [1,1,0,0],
         L_ES: [0,1,1,0],
         L_SW: [0,0,1,1],
         L_WN: [1,0,0,1],
-        T_NES: [1,1,1,0], // T-Shape (can be rotated)
-        X: [1,1,1,1],     // Cross
-        S: [0,1,0,0],     // Start (East only)
-        E: [0,0,0,1]      // End (West only)
+        T_NES: [1,1,1,0],
+        X: [1,1,1,1],
+        S: [0,1,0,0],     
+        E: [0,0,0,1]      
     };
 
-    // --- LEVEL MAP ---
-    // S=Start, E=End, G1-4=Glitches, x=Deco/Useless pipes, .=Correct path placeholder
-    // We map the logic path. All other cells will be filled with random junk pipes.
-    // Path coordinates:
-    // (0,0)S -> (1,0) -> (2,0)G1 -> (3,0) -> (3,1) -> (3,2) -> (2,2)G2 -> (1,2) -> (1,3) -> (1,4) -> (2,4) -> (3,4)G3 -> (4,4) -> (4,3) -> (5,3) -> (6,3)G4 -> (7,3)E
-    // Note: I will hardcode the types for the correct path to ensure it's solvable by rotation.
-    
-    /* 0 1 2 3 4 5 6 7
-     0 S - G - . . . .
-     1 . . . | . . . .
-     2 . - G L . . . .
-     3 . | . . . . G E
-     4 . L - - G L | .
-     5 . . . . . . . .
-     6 . . . . . . . .
-    */
-
+    // The Single Correct Path (Coordinates)
+    // S(0,0) -> (1,0) -> (2,0)G1 -> (3,0) -> (3,1) -> (3,2) -> (2,2)G2 -> (1,2) -> (1,3) -> (1,4) -> (2,4) -> (3,4)G3 -> (4,4) -> (4,3) -> (5,3) -> (6,3)G4 -> (7,3)E
     const PATH_MAP = {
         '0,0': {type: 'S', fixed: true},
         '1,0': {type: 'H', fixed: false},
@@ -381,61 +355,38 @@
         '7,3': {type: 'E', fixed: true}
     };
 
-    // Challenges Data
     const CHALLENGES = {
         'G1': {
             title: "DATA CLEANING",
-            desc: "The pipe is clogged with mixed date formats (USA/EU). The flow stopped.",
-            options: [
-                "Manually edit 500 rows",
-                "Prompt: 'Standardize dates to DD/MM/YYYY'",
-                "Delete the column"
-            ],
-            correctIdx: 1,
-            fixType: 'H' // Becomes Horizontal
+            desc: "Format mismatch. Dates are US style, need EU style.",
+            options: ["Manually edit rows", "Prompt: 'Standardize dates to DD/MM/YYYY'", "Delete column"],
+            correctIdx: 1, fixType: 'H'
         },
         'G2': {
             title: "MISSING FORMULA",
-            desc: "Leak detected! We need to calculate VAT for German orders only.",
-            options: [
-                "Google search for IF formulas",
-                "Prompt: 'Calculate 19% if Country is DE'",
-                "Use a calculator"
-            ],
-            correctIdx: 1,
-            fixType: 'H' // Becomes Horizontal
+            desc: "Need VAT calculation for DE only.",
+            options: ["Search Google for IF", "Prompt: 'Calculate 19% if Country is DE'", "Calculator"],
+            correctIdx: 1, fixType: 'H'
         },
         'G3': {
             title: "CROSS REFERENCING",
-            desc: "Valve stuck. Need to merge Return Status from Sheet 2 based on Order ID.",
-            options: [
-                "Copy-Paste one by one",
-                "Write complex VLOOKUP",
-                "Prompt: 'Look up Status from Sheet 2'"
-            ],
-            correctIdx: 2,
-            fixType: 'H' // Becomes Horizontal
+            desc: "Need Return Status from Sheet 2.",
+            options: ["Copy-Paste", "Write VLOOKUP", "Prompt: 'Look up Status from Sheet 2'"],
+            correctIdx: 2, fixType: 'H'
         },
         'G4': {
             title: "VISUALIZATION",
-            desc: "Pressure rising! Management wants a bar chart of Sales by Brand immediately.",
-            options: [
-                "Prompt: 'Create bar chart of Sales by Brand'",
-                "Draw it on paper",
-                "Export to Paint"
-            ],
-            correctIdx: 0,
-            fixType: 'H' // Becomes Horizontal
+            desc: "Management needs Sales by Brand chart ASAP.",
+            options: ["Prompt: 'Create bar chart'", "Draw on paper", "Use Paint"],
+            correctIdx: 0, fixType: 'H'
         }
     };
 
-    // --- STATE ---
     let grid = [];
     let zally = {x:0, y:0};
     let fixedCount = 0;
     let isPaused = true;
 
-    // --- INIT ---
     function startGame() {
         document.getElementById('modal-start').style.display = 'none';
         buildGrid();
@@ -456,49 +407,33 @@
             let row = [];
             for(let x=0; x<COLS; x++) {
                 const key = `${x},${y}`;
-                let tileDef = PATH_MAP[key];
+                let def = PATH_MAP[key];
 
-                let tile = {
-                    x, y,
-                    conns: [0,0,0,0],
-                    fixed: false,
-                    isGlitch: false,
-                    el: null
-                };
+                let tile = { x, y, conns: [0,0,0,0], fixed: false, isGlitch: false, el: null };
 
-                // Determine Type
-                let typeCode = 'EMPTY';
-                
-                if (tileDef) {
-                    // It is part of the solution path
-                    tile.fixed = tileDef.fixed; // If Start/End
-                    tile.isGlitch = tileDef.isGlitch || false;
-                    tile.glitchId = tileDef.type; // G1, G2 etc
-                    
+                let type = 'EMPTY';
+                if (def) {
+                    tile.fixed = def.fixed;
+                    tile.isGlitch = def.isGlitch || false;
+                    tile.glitchId = def.type;
                     if (tile.isGlitch) {
-                        typeCode = 'H'; // Glitches look like broken horizontal pipes initially
-                        tile.conns = [0,0,0,0]; // Broken = no flow
+                        type = 'H';
+                        tile.conns = [0,0,0,0]; // Broken
                     } else {
-                        typeCode = tileDef.type;
-                        tile.conns = [...PIPES[typeCode]];
+                        type = def.type;
+                        tile.conns = [...PIPES[type]];
                     }
                 } else {
-                    // Filler / Useless pipe
-                    // Randomize type to make map look dense
-                    const rnd = Math.random();
-                    if(rnd < 0.2) typeCode = 'I';
-                    else if(rnd < 0.4) typeCode = 'H';
-                    else if(rnd < 0.6) typeCode = 'L_NE';
-                    else if(rnd < 0.8) typeCode = 'T_NES';
-                    else typeCode = 'X';
-                    
-                    tile.conns = [...PIPES[typeCode]];
+                    // Random filler
+                    const r = Math.random();
+                    if(r < 0.3) type = 'I'; else if(r < 0.6) type = 'H'; else type = 'L_NE';
+                    tile.conns = [...PIPES[type]];
                 }
 
-                // Initial Random Rotation (except Start, End, Glitch)
+                // Random Rotate non-fixed tiles
                 if (!tile.fixed && !tile.isGlitch) {
                     let r = Math.floor(Math.random() * 4);
-                    for(let i=0; i<r; i++) rotateArray(tile.conns);
+                    for(let i=0; i<r; i++) tile.conns.unshift(tile.conns.pop());
                 }
 
                 createTileDOM(tile, board);
@@ -511,100 +446,85 @@
     function createTileDOM(tile, container) {
         const el = document.createElement('div');
         el.className = 'tile';
-        if (tile.isGlitch) el.classList.add('glitch');
+        if(tile.isGlitch) el.classList.add('glitch');
 
-        // Internal HTML Structure for Pipes and Water
-        // Only draw if not effectively empty (though fillers have types)
         let html = `
             <div class="pipe-part center"></div>
             <div class="pipe-part arm-n" id="p-n-${tile.x}-${tile.y}"></div>
             <div class="pipe-part arm-e" id="p-e-${tile.x}-${tile.y}"></div>
             <div class="pipe-part arm-s" id="p-s-${tile.x}-${tile.y}"></div>
             <div class="pipe-part arm-w" id="p-w-${tile.x}-${tile.y}"></div>
-
-            <div class="water w-center"></div>
-            <div class="water w-n"></div>
-            <div class="water w-e"></div>
-            <div class="water w-s"></div>
-            <div class="water w-w"></div>
+            
+            <div class="water-layer w-center" id="w-c-${tile.x}-${tile.y}"></div>
+            <div class="water-layer w-n" id="w-n-${tile.x}-${tile.y}"></div>
+            <div class="water-layer w-e" id="w-e-${tile.x}-${tile.y}"></div>
+            <div class="water-layer w-s" id="w-s-${tile.x}-${tile.y}"></div>
+            <div class="water-layer w-w" id="w-w-${tile.x}-${tile.y}"></div>
         `;
 
-        if (tile.isGlitch) html += `<div class="glitch-mark">⚠️</div>`;
-        if (PATH_MAP[`${tile.x},${tile.y}`]?.type === 'S') html += `<div class="label start-label">IN</div>`;
-        if (PATH_MAP[`${tile.x},${tile.y}`]?.type === 'E') html += `<div class="label end-label">OUT</div>`;
+        if(tile.isGlitch) html += `<div class="glitch-mark">⚠️</div>`;
+        if(PATH_MAP[`${tile.x},${tile.y}`]?.type === 'S') html += `<div class="label start-label">IN</div>`;
+        if(PATH_MAP[`${tile.x},${tile.y}`]?.type === 'E') html += `<div class="label end-label">OUT</div>`;
 
         el.innerHTML = html;
         container.appendChild(el);
         tile.el = el;
-        updateTileVisuals(tile);
+        updateVisuals(tile);
     }
 
-    function rotateArray(arr) {
-        // [N, E, S, W] -> [W, N, E, S]
-        arr.unshift(arr.pop());
-    }
-
-    function updateTileVisuals(tile) {
+    function updateVisuals(tile) {
         const c = tile.conns;
         const e = tile.el;
-        
         e.querySelector(`#p-n-${tile.x}-${tile.y}`).style.display = c[0] ? 'block' : 'none';
         e.querySelector(`#p-e-${tile.x}-${tile.y}`).style.display = c[1] ? 'block' : 'none';
         e.querySelector(`#p-s-${tile.x}-${tile.y}`).style.display = c[2] ? 'block' : 'none';
         e.querySelector(`#p-w-${tile.x}-${tile.y}`).style.display = c[3] ? 'block' : 'none';
+        
+        // Ensure water follows pipe arms
+        e.querySelector(`#w-n-${tile.x}-${tile.y}`).style.display = c[0] ? 'block' : 'none';
+        e.querySelector(`#w-e-${tile.x}-${tile.y}`).style.display = c[1] ? 'block' : 'none';
+        e.querySelector(`#w-s-${tile.x}-${tile.y}`).style.display = c[2] ? 'block' : 'none';
+        e.querySelector(`#w-w-${tile.x}-${tile.y}`).style.display = c[3] ? 'block' : 'none';
 
-        if (!tile.isGlitch && e.classList.contains('glitch')) {
+        if(!tile.isGlitch && e.classList.contains('glitch')) {
             e.classList.remove('glitch');
             e.querySelector('.glitch-mark').remove();
         }
     }
 
-    // --- INPUT HANDLING ---
     document.addEventListener('keydown', (e) => {
         if(isPaused) return;
-
         if(e.key === 'ArrowUp' && zally.y > 0) zally.y--;
         if(e.key === 'ArrowDown' && zally.y < ROWS-1) zally.y++;
         if(e.key === 'ArrowLeft' && zally.x > 0) zally.x--;
         if(e.key === 'ArrowRight' && zally.x < COLS-1) zally.x++;
-        
         updateCursor();
 
-        // Rotate
         if(e.key === ' ' || e.code === 'Space') {
             let t = grid[zally.y][zally.x];
-            // Allow rotation of normal pipes and fixed glitches, but not start/end
             if(!t.fixed && !t.isGlitch) {
-                rotateArray(t.conns);
-                updateTileVisuals(t);
+                t.conns.unshift(t.conns.pop());
+                updateVisuals(t);
             }
         }
-
-        // Gemini Interaction
         if(e.key === 'Enter') {
             let t = grid[zally.y][zally.x];
             if(t.isGlitch) openQuiz(t);
         }
-
-        // Flow Test
         if(e.key === 'f' || e.key === 'F') startFlow();
     });
 
     function updateCursor() {
-        const c = document.getElementById('cursor');
-        c.style.transform = `translate(${zally.x * 80}px, ${zally.y * 80}px)`;
+        document.getElementById('cursor').style.transform = `translate(${zally.x * 80}px, ${zally.y * 80}px)`;
     }
 
-    // --- QUIZ LOGIC ---
     function openQuiz(tile) {
         isPaused = true;
         const data = CHALLENGES[tile.glitchId];
-        
         document.getElementById('quiz-title').innerText = data.title;
         document.getElementById('quiz-desc').innerText = data.desc;
         const opts = document.getElementById('quiz-options');
         opts.innerHTML = '';
-
         data.options.forEach((txt, idx) => {
             let btn = document.createElement('button');
             btn.className = 'btn-arcade';
@@ -612,117 +532,98 @@
             btn.onclick = () => solveQuiz(idx === data.correctIdx, tile, data);
             opts.appendChild(btn);
         });
-
         document.getElementById('modal-quiz').style.display = 'block';
     }
 
     function solveQuiz(isCorrect, tile, data) {
         document.getElementById('modal-quiz').style.display = 'none';
         isPaused = false;
-
-        if (isCorrect) {
+        if(isCorrect) {
             tile.isGlitch = false;
-            tile.fixed = false; // Now it can be rotated if needed (though usually fixed shape is enough)
+            tile.fixed = false;
             tile.conns = [...PIPES[data.fixType]];
-            updateTileVisuals(tile);
-            
+            updateVisuals(tile);
             fixedCount++;
             document.getElementById('fixed-count').innerText = fixedCount;
             document.getElementById('integrity').innerText = (fixedCount * 25) + "%";
         } else {
-            alert("Gemini: 'I didn't quite catch that context.' Try again!");
+            alert("Incorrect Prompt. Try again.");
         }
     }
 
-    // --- FLOW ALGORITHM (BFS) ---
     function startFlow() {
-        // Reset Water
+        // Clear Water
         document.querySelectorAll('.tile').forEach(t => t.classList.remove('wet'));
-        const statusText = document.getElementById('status-text');
-        statusText.innerText = "PUMPING...";
-        statusText.className = "status-display active";
+        const st = document.getElementById('flow-status');
+        st.innerText = "PUMPING...";
+        st.className = "metric-value pumping";
 
-        let queue = [{x:0, y:0}];
-        let visited = new Set(['0,0']);
+        let curr = {x:0, y:0}; // Start
+        let path = [curr];
         let endReached = false;
+        
+        // Simply follow the connection
+        // Logic: Find neighbor that connects TO me
         
         // Wet Start
         grid[0][0].el.classList.add('wet');
-
+        
+        // Single Path Crawler
         let delay = 0;
+        let visited = new Set(['0,0']);
+        
+        // Crawler
+        function crawl(x, y) {
+            let t = grid[y][x];
+            let foundNext = false;
 
-        function propagate() {
-            let nextQueue = [];
-            if (queue.length === 0) return;
+            // Check neighbors
+            const dirs = [
+                {dx:0, dy:-1, out:0, in:2}, // N
+                {dx:1, dy:0,  out:1, in:3}, // E
+                {dx:0, dy:1,  out:2, in:0}, // S
+                {dx:-1, dy:0, out:3, in:1}  // W
+            ];
 
-            queue.forEach(curr => {
-                let t = grid[curr.y][curr.x];
-                
-                // Directions: N(0), E(1), S(2), W(3)
-                const dirs = [
-                    {dx:0, dy:-1, out:0, in:2},
-                    {dx:1, dy:0,  out:1, in:3},
-                    {dx:0, dy:1,  out:2, in:0},
-                    {dx:-1, dy:0, out:3, in:1}
-                ];
-
-                dirs.forEach(d => {
-                    // 1. Current tile must output in this direction
-                    if (t.conns[d.out]) {
-                        let nx = curr.x + d.dx;
-                        let ny = curr.y + d.dy;
-
-                        // Check bounds
-                        if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
-                            let nextT = grid[ny][nx];
-                            
-                            // 2. Next tile must accept input from this direction AND not be glitch
-                            if (nextT.conns[d.in] && !nextT.isGlitch) {
-                                let key = `${nx},${ny}`;
-                                if (!visited.has(key)) {
-                                    visited.add(key);
-                                    nextQueue.push({x:nx, y:ny});
-                                    
-                                    // Visual Delay
-                                    setTimeout(() => {
-                                        nextT.el.classList.add('wet');
-                                    }, delay * 200);
-
-                                    // Check Win
-                                    if (PATH_MAP[`${nx},${ny}`]?.type === 'E') endReached = true;
+            for(let d of dirs) {
+                if(t.conns[d.out]) {
+                    let nx = x + d.dx;
+                    let ny = y + d.dy;
+                    if(nx >=0 && nx < COLS && ny >=0 && ny < ROWS) {
+                        let nt = grid[ny][nx];
+                        // If connection matches AND not visited
+                        if(nt.conns[d.in] && !nt.isGlitch && !visited.has(`${nx},${ny}`)) {
+                            visited.add(`${nx},${ny}`);
+                            foundNext = true;
+                            delay++;
+                            setTimeout(() => {
+                                nt.el.classList.add('wet');
+                                if(PATH_MAP[`${nx},${ny}`]?.type === 'E') {
+                                    if(fixedCount === 4) {
+                                        st.innerText = "ONLINE";
+                                        st.className = "metric-value success";
+                                        document.getElementById('modal-win').style.display = 'block';
+                                    }
                                 }
-                            }
+                            }, delay * 200);
+                            
+                            // Recursive step
+                            setTimeout(() => crawl(nx, ny), 0); 
+                            break; // Single path
                         }
                     }
-                });
-            });
-
-            queue = nextQueue;
-            delay++;
+                }
+            }
             
-            if (queue.length > 0) {
-                propagate();
-            } else {
-                // Finish
-                setTimeout(() => {
-                    if (endReached && fixedCount === 4) {
-                        statusText.innerText = "ONLINE";
-                        statusText.className = "status-display success";
-                        document.getElementById('modal-win').style.display = 'block';
-                    } else {
-                        statusText.innerText = "ERROR";
-                        statusText.className = "status-display error";
-                        setTimeout(() => {
-                             statusText.innerText = "OFFLINE";
-                             statusText.className = "status-display";
-                             document.querySelectorAll('.tile').forEach(t => t.classList.remove('wet'));
-                        }, 2000);
-                    }
-                }, delay * 200 + 500);
+            if(!foundNext && delay > 0 && fixedCount < 4) {
+                 setTimeout(() => {
+                     st.innerText = "BLOCKED";
+                     st.className = "metric-value fail";
+                 }, delay * 200 + 500);
             }
         }
 
-        propagate();
+        crawl(0,0);
     }
 
 </script>
