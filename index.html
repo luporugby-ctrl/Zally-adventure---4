@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zally's Data Flow: Pipe Mania Challenge</title>
+    <title>Zally Pipeline Challenge</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
         :root {
             --bg-color: #202028;
             --panel-bg: #1a1a20;
-            --grid-bg: #0d0d10;
-            --pipe-color: #7f8c8d;
-            --pipe-border: #2c3e50;
-            --water-color: #00bcd4;
-            --rust-color: #c0392b;
+            --grid-bg: #000;
+            --pipe-gray: #555;
+            --pipe-border: #222;
+            --water-blue: #00bcd4;
+            --rust-red: #c0392b;
             --zalando-orange: #ff6900;
-            --text-shadow: 2px 2px 0px #000;
             --success-green: #2ecc71;
             --danger-red: #e74c3c;
         }
@@ -34,28 +33,26 @@
             user-select: none;
         }
 
-        /* MAIN LAYOUT */
         .main-container {
             display: flex;
-            gap: 30px;
+            gap: 40px;
             align-items: flex-start;
         }
 
-        /* LEFT SIDEBAR */
+        /* --- SIDEBAR --- */
         .sidebar {
             display: flex;
             flex-direction: column;
-            width: 260px;
+            width: 280px;
             gap: 20px;
         }
 
-        /* ZALLY AVATAR SECTION */
         .zally-profile {
             background: var(--panel-bg);
             border: 4px solid #fff;
             padding: 20px;
             text-align: center;
-            box-shadow: 6px 6px 0px #000;
+            box-shadow: 8px 8px 0px #000;
         }
 
         .zally-img-container {
@@ -71,53 +68,48 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            image-rendering: pixelated;
+            image-rendering: pixelated; 
         }
 
         .profile-name {
             color: var(--zalando-orange);
             font-size: 14px;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             text-shadow: 2px 2px 0 #000;
+            text-transform: uppercase;
         }
 
         .profile-role {
             color: #aaa;
             font-size: 10px;
+            text-transform: uppercase;
         }
 
-        /* METRICS */
         .metrics-box {
             background: var(--panel-bg);
             border: 4px solid #555;
-            padding: 15px;
-            box-shadow: 6px 6px 0px #000;
+            padding: 20px;
+            box-shadow: 8px 8px 0px #000;
         }
 
-        .metric-row {
-            margin-bottom: 15px;
-        }
+        .metric-row { margin-bottom: 20px; }
+        .metric-row:last-child { margin-bottom: 0; }
+        .metric-label { font-size: 10px; color: #888; margin-bottom: 8px; display: block; }
+        .metric-value { font-size: 18px; color: #fff; }
 
-        .metric-label {
-            font-size: 10px;
-            color: #888;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .metric-value {
-            font-size: 16px;
-            color: #fff;
-        }
-
-        #flow-status {
-            color: #555; /* Default */
-        }
-        #flow-status.pumping { color: var(--water-color); animation: blink 0.5s infinite; }
+        #flow-status { color: #555; transition: color 0.3s; }
+        #flow-status.pumping { color: var(--water-blue); animation: blink 0.5s infinite; }
         #flow-status.success { color: var(--success-green); }
         #flow-status.fail { color: var(--danger-red); }
 
-        /* GAME GRID */
+        .controls-hint { 
+            font-size: 10px; color: #777; margin-top: 20px; 
+            text-align: center; line-height: 2;
+            border-top: 2px solid #333;
+            padding-top: 10px;
+        }
+
+        /* --- GAME BOARD --- */
         #game-board {
             display: grid;
             grid-template-columns: repeat(8, 80px); 
@@ -125,70 +117,78 @@
             gap: 0;
             background: var(--grid-bg);
             border: 8px solid #555;
-            box-shadow: 15px 15px 0px #000;
+            box-shadow: 20px 20px 0px #000;
             position: relative;
         }
 
-        /* TILE & PIPES */
         .tile {
             width: 80px;
             height: 80px;
             position: relative;
             box-sizing: border-box;
-            border: 1px solid #1a1a1a;
+            border: 1px solid #222;
         }
 
-        /* Pipe Graphics */
-        .pipe-part {
+        /* --- PIPE STRUCTURE (Layer 1) --- */
+        .pipe-bg {
             position: absolute;
-            background: var(--pipe-color);
+            background: var(--pipe-gray);
             border: 4px solid var(--pipe-border);
-            z-index: 1;
-        }
-
-        /* Geometria dei tubi */
-        .center { top: 24px; left: 24px; width: 32px; height: 32px; z-index: 2; }
-        .arm-n { top: -4px; left: 24px; width: 32px; height: 32px; border-bottom: none; }
-        .arm-e { top: 24px; right: -4px; width: 32px; height: 32px; border-left: none; }
-        .arm-s { bottom: -4px; left: 24px; width: 32px; height: 32px; border-top: none; }
-        .arm-w { top: 24px; left: -4px; width: 32px; height: 32px; border-right: none; }
-
-        /* Water Overlay (Only visible when .wet class is added) */
-        .water-layer {
-            position: absolute;
-            background: var(--water-color);
-            z-index: 3;
+            z-index: 1; /* Base Layer */
             display: none; /* Hidden by default */
         }
 
-        .tile.wet .water-layer { display: block; }
+        /* Center Hub */
+        .p-center { 
+            top: 24px; left: 24px; width: 32px; height: 32px; 
+            display: block; /* Always visible if pipe exists */
+            border: none; 
+            background: var(--pipe-gray);
+            z-index: 1;
+        }
 
+        /* Arms */
+        .p-n { top: 0; left: 24px; width: 32px; height: 32px; border-bottom: none; }
+        .p-e { top: 24px; right: 0; width: 32px; height: 32px; border-left: none; }
+        .p-s { bottom: 0; left: 24px; width: 32px; height: 32px; border-top: none; }
+        .p-w { top: 24px; left: 0; width: 32px; height: 32px; border-right: none; }
+
+        /* --- WATER STRUCTURE (Layer 2) --- */
+        .water-fill {
+            position: absolute;
+            background: var(--water-blue);
+            z-index: 2; /* Top Layer */
+            display: none; /* Strictly hidden */
+        }
+
+        /* Water is slightly smaller than pipe to show "inside" effect */
         .w-center { top: 28px; left: 28px; width: 24px; height: 24px; }
         .w-n { top: 0; left: 28px; width: 24px; height: 28px; }
         .w-e { top: 28px; left: 28px; width: 52px; height: 24px; }
         .w-s { top: 28px; left: 28px; width: 24px; height: 52px; }
         .w-w { top: 28px; left: 0; width: 28px; height: 24px; }
 
-        /* Glitch Style */
-        .tile.glitch .pipe-part { background: var(--rust-color); border-color: #58130a; }
-        .glitch-mark {
+        /* --- GLITCH & LABELS --- */
+        .tile.glitch .pipe-bg, .tile.glitch .p-center { background: var(--rust-red); border-color: #58130a; }
+        .glitch-icon {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             font-size: 24px;
             z-index: 10;
             animation: bounce 1s infinite;
+            text-shadow: 2px 2px 0 #000;
         }
 
-        /* Labels */
         .label {
             position: absolute;
             font-size: 8px;
             font-weight: bold;
             color: #000;
-            padding: 2px 4px;
+            padding: 4px;
             z-index: 5;
             top: 2px; left: 2px;
+            border: 2px solid white;
         }
         .start-label { background: var(--success-green); }
         .end-label { background: #f1c40f; }
@@ -198,8 +198,8 @@
             position: absolute;
             width: 80px; height: 80px;
             border: 4px solid var(--zalando-orange);
-            background: rgba(255, 105, 0, 0.1);
-            box-shadow: 0 0 10px var(--zalando-orange);
+            background: rgba(255, 105, 0, 0.15);
+            box-shadow: 0 0 15px var(--zalando-orange);
             z-index: 20;
             pointer-events: none;
             transition: transform 0.1s;
@@ -212,24 +212,22 @@
             transform: translate(-50%, -50%);
             background: #0000aa;
             border: 4px solid #fff;
-            padding: 25px;
-            width: 500px;
+            padding: 30px;
+            width: 550px;
             display: none;
             z-index: 100;
-            box-shadow: 10px 10px 0px rgba(0,0,0,0.8);
+            box-shadow: 20px 20px 0px rgba(0,0,0,0.8);
             text-align: center;
         }
-
-        .retro-modal h2 { background: #fff; color: #0000aa; margin: -25px -25px 20px -25px; padding: 10px; font-size: 14px; }
-        .retro-modal p { line-height: 1.6; font-size: 12px; margin-bottom: 20px; }
+        .retro-modal h2 { background: #fff; color: #0000aa; margin: -30px -30px 20px -30px; padding: 15px; font-size: 16px; text-transform: uppercase;}
+        .retro-modal p { line-height: 1.8; font-size: 12px; margin-bottom: 25px; }
 
         .btn-arcade {
-            display: block; width: 100%; background: #000; color: white; border: 2px solid white; padding: 15px;
-            font-family: 'Press Start 2P'; font-size: 10px; text-align: left; cursor: pointer; margin-bottom: 10px;
+            display: block; width: 100%; background: #000; color: white; border: 4px solid white; padding: 15px;
+            font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer; margin-bottom: 10px;
+            text-transform: uppercase;
         }
-        .btn-arcade:hover { background: var(--gemini-blue); }
-
-        .controls-hint { font-size: 10px; color: #777; margin-top: 15px; text-align: center; line-height: 1.8;}
+        .btn-arcade:hover { background: var(--water-blue); border-color: #fff; }
 
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes bounce { 0%, 100% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, -60%); } }
@@ -239,20 +237,17 @@
 <body>
 
     <div class="main-container">
-        
         <!-- SIDEBAR -->
         <div class="sidebar">
-            
-            <!-- ZALLY PROFILE -->
             <div class="zally-profile">
                 <div class="zally-img-container">
-                    <img src="zally-water.jpg" class="zally-avatar" alt="Zally" onerror="this.src='https://via.placeholder.com/120/ff6900/ffffff?text=Z'">
+                    <!-- IMAGE -->
+                    <img src="zally-water.png" class="zally-avatar" alt="Zally" onerror="this.style.display='none'; this.parentNode.style.background='#ff6900'">
                 </div>
-                <div class="profile-name">ZALLY OPS</div>
+                <div class="profile-name">ZALLY</div>
                 <div class="profile-role">PIPELINE ENGINEER</div>
             </div>
 
-            <!-- METRICS -->
             <div class="metrics-box">
                 <div class="metric-row">
                     <span class="metric-label">PIPES FIXED</span>
@@ -276,65 +271,56 @@
             </div>
         </div>
 
-        <!-- GAME GRID -->
+        <!-- GAME BOARD -->
         <div id="game-board">
             <div id="cursor"></div>
-            <!-- Grid generated by JS -->
         </div>
-
     </div>
 
     <!-- MODALS -->
     <div id="modal-start" class="retro-modal" style="display:block">
-        <h2>MISSION BRIEFING</h2>
+        <h2>Mission Briefing</h2>
         <p>
-            Welcome Zally.<br><br>
-            The pipeline is broken in 4 spots.<br>
-            Data cannot flow from IN to OUT.<br><br>
-            1. Find the rusty pipes (Glitches)<br>
-            2. Press ENTER to call Gemini<br>
-            3. Fix the pipe and rotate the path
+            The Pipeline is broken.<br><br>
+            1. Find rusty pipes (Glitches)<br>
+            2. ENTER to fix with Gemini<br>
+            3. SPACE to rotate pipes<br>
+            4. 'F' to start the flow
         </p>
-        <button class="btn-arcade" style="text-align:center" onclick="startGame()">>>> START SHIFT <<<</button>
+        <button class="btn-arcade" onclick="startGame()">Start Shift</button>
     </div>
 
     <div id="modal-quiz" class="retro-modal">
-        <h2 id="quiz-title">CHALLENGE</h2>
+        <h2 id="quiz-title">Challenge</h2>
         <p id="quiz-desc">...</p>
         <div id="quiz-options"></div>
     </div>
 
     <div id="modal-win" class="retro-modal">
-        <h2 style="background:var(--success-green); color:white;">SYSTEM ONLINE</h2>
+        <h2 style="background:var(--success-green); color:white;">System Online</h2>
         <p>
-            EXCELLENT WORK!<br><br>
-            The pipeline is fully operational.<br>
-            All data challenges resolved using Gemini.
+            SUCCESS!<br><br>
+            Gemini integration complete.<br>
+            Data is flowing correctly.
         </p>
-        <button class="btn-arcade" style="text-align:center" onclick="location.reload()">NEXT REPORT</button>
+        <button class="btn-arcade" onclick="location.reload()">New Report</button>
     </div>
 
 <script>
+    // --- CONFIG ---
     const COLS = 8;
     const ROWS = 7;
     
-    // Pipe Types: [North, East, South, West]
+    // Connections: [North, East, South, West]
     const PIPES = {
         EMPTY: [0,0,0,0],
-        I: [1,0,1,0],     
-        H: [0,1,0,1],     
-        L_NE: [1,1,0,0],
-        L_ES: [0,1,1,0],
-        L_SW: [0,0,1,1],
-        L_WN: [1,0,0,1],
-        T_NES: [1,1,1,0],
-        X: [1,1,1,1],
-        S: [0,1,0,0],     
-        E: [0,0,0,1]      
+        I: [1,0,1,0], H: [0,1,0,1],
+        L_NE: [1,1,0,0], L_ES: [0,1,1,0], L_SW: [0,0,1,1], L_WN: [1,0,0,1],
+        T_NES: [1,1,1,0], X: [1,1,1,1],
+        S: [0,1,0,0], E: [0,0,0,1]
     };
 
-    // The Single Correct Path (Coordinates)
-    // S(0,0) -> (1,0) -> (2,0)G1 -> (3,0) -> (3,1) -> (3,2) -> (2,2)G2 -> (1,2) -> (1,3) -> (1,4) -> (2,4) -> (3,4)G3 -> (4,4) -> (4,3) -> (5,3) -> (6,3)G4 -> (7,3)E
+    // Map Layout (Snake Pattern)
     const PATH_MAP = {
         '0,0': {type: 'S', fixed: true},
         '1,0': {type: 'H', fixed: false},
@@ -356,36 +342,17 @@
     };
 
     const CHALLENGES = {
-        'G1': {
-            title: "DATA CLEANING",
-            desc: "Format mismatch. Dates are US style, need EU style.",
-            options: ["Manually edit rows", "Prompt: 'Standardize dates to DD/MM/YYYY'", "Delete column"],
-            correctIdx: 1, fixType: 'H'
-        },
-        'G2': {
-            title: "MISSING FORMULA",
-            desc: "Need VAT calculation for DE only.",
-            options: ["Search Google for IF", "Prompt: 'Calculate 19% if Country is DE'", "Calculator"],
-            correctIdx: 1, fixType: 'H'
-        },
-        'G3': {
-            title: "CROSS REFERENCING",
-            desc: "Need Return Status from Sheet 2.",
-            options: ["Copy-Paste", "Write VLOOKUP", "Prompt: 'Look up Status from Sheet 2'"],
-            correctIdx: 2, fixType: 'H'
-        },
-        'G4': {
-            title: "VISUALIZATION",
-            desc: "Management needs Sales by Brand chart ASAP.",
-            options: ["Prompt: 'Create bar chart'", "Draw on paper", "Use Paint"],
-            correctIdx: 0, fixType: 'H'
-        }
+        'G1': { title: "DATA CLEANING", desc: "Dates mismatch (US vs EU).", options: ["Edit manually", "Prompt: 'Standardize dates'", "Delete"], correctIdx: 1, fixType: 'H' },
+        'G2': { title: "FORMULA GAP", desc: "Need VAT for DE.", options: ["Search Google", "Prompt: 'Calc 19% if DE'", "Calc manually"], correctIdx: 1, fixType: 'H' },
+        'G3': { title: "DATA MERGE", desc: "Need Status from Sheet 2.", options: ["Copy-Paste", "VLOOKUP", "Prompt: 'Look up Status'"], correctIdx: 2, fixType: 'H' },
+        'G4': { title: "CHART NEEDED", desc: "Need Sales Chart.", options: ["Prompt: 'Create bar chart'", "Draw it", "Excel"], correctIdx: 0, fixType: 'H' }
     };
 
     let grid = [];
     let zally = {x:0, y:0};
     let fixedCount = 0;
     let isPaused = true;
+    let flowTimer = null;
 
     function startGame() {
         document.getElementById('modal-start').style.display = 'none';
@@ -400,7 +367,6 @@
         const cursor = document.getElementById('cursor');
         board.innerHTML = '';
         board.appendChild(cursor);
-
         grid = [];
 
         for(let y=0; y<ROWS; y++) {
@@ -408,7 +374,6 @@
             for(let x=0; x<COLS; x++) {
                 const key = `${x},${y}`;
                 let def = PATH_MAP[key];
-
                 let tile = { x, y, conns: [0,0,0,0], fixed: false, isGlitch: false, el: null };
 
                 let type = 'EMPTY';
@@ -417,21 +382,21 @@
                     tile.isGlitch = def.isGlitch || false;
                     tile.glitchId = def.type;
                     if (tile.isGlitch) {
-                        type = 'H';
-                        tile.conns = [0,0,0,0]; // Broken
+                        type = 'H'; 
+                        tile.conns = [0,0,0,0];
                     } else {
                         type = def.type;
                         tile.conns = [...PIPES[type]];
                     }
                 } else {
-                    // Random filler
+                    // Random Filler
                     const r = Math.random();
-                    if(r < 0.3) type = 'I'; else if(r < 0.6) type = 'H'; else type = 'L_NE';
+                    type = r < 0.3 ? 'I' : (r < 0.6 ? 'H' : 'L_NE');
                     tile.conns = [...PIPES[type]];
                 }
 
-                // Random Rotate non-fixed tiles
                 if (!tile.fixed && !tile.isGlitch) {
+                    // Random Rotate
                     let r = Math.floor(Math.random() * 4);
                     for(let i=0; i<r; i++) tile.conns.unshift(tile.conns.pop());
                 }
@@ -449,17 +414,19 @@
         if(tile.isGlitch) el.classList.add('glitch');
 
         let html = `
-            <div class="pipe-part center"></div>
-            <div class="pipe-part arm-n" id="p-n-${tile.x}-${tile.y}"></div>
-            <div class="pipe-part arm-e" id="p-e-${tile.x}-${tile.y}"></div>
-            <div class="pipe-part arm-s" id="p-s-${tile.x}-${tile.y}"></div>
-            <div class="pipe-part arm-w" id="p-w-${tile.x}-${tile.y}"></div>
+            <!-- PIPES (Gray) -->
+            <div class="pipe-bg p-center"></div>
+            <div class="pipe-bg p-n" id="p-n-${tile.x}-${tile.y}"></div>
+            <div class="pipe-bg p-e" id="p-e-${tile.x}-${tile.y}"></div>
+            <div class="pipe-bg p-s" id="p-s-${tile.x}-${tile.y}"></div>
+            <div class="pipe-bg p-w" id="p-w-${tile.x}-${tile.y}"></div>
             
-            <div class="water-layer w-center" id="w-c-${tile.x}-${tile.y}"></div>
-            <div class="water-layer w-n" id="w-n-${tile.x}-${tile.y}"></div>
-            <div class="water-layer w-e" id="w-e-${tile.x}-${tile.y}"></div>
-            <div class="water-layer w-s" id="w-s-${tile.x}-${tile.y}"></div>
-            <div class="water-layer w-w" id="w-w-${tile.x}-${tile.y}"></div>
+            <!-- WATER (Blue) - Hidden by default -->
+            <div class="water-fill w-center" id="w-c-${tile.x}-${tile.y}"></div>
+            <div class="water-fill w-n" id="w-n-${tile.x}-${tile.y}"></div>
+            <div class="water-fill w-e" id="w-e-${tile.x}-${tile.y}"></div>
+            <div class="water-fill w-s" id="w-s-${tile.x}-${tile.y}"></div>
+            <div class="water-fill w-w" id="w-w-${tile.x}-${tile.y}"></div>
         `;
 
         if(tile.isGlitch) html += `<div class="glitch-mark">⚠️</div>`;
@@ -469,22 +436,17 @@
         el.innerHTML = html;
         container.appendChild(el);
         tile.el = el;
-        updateVisuals(tile);
+        updatePipeVisuals(tile);
     }
 
-    function updateVisuals(tile) {
+    function updatePipeVisuals(tile) {
         const c = tile.conns;
         const e = tile.el;
+        // Show Gray Pipes
         e.querySelector(`#p-n-${tile.x}-${tile.y}`).style.display = c[0] ? 'block' : 'none';
         e.querySelector(`#p-e-${tile.x}-${tile.y}`).style.display = c[1] ? 'block' : 'none';
         e.querySelector(`#p-s-${tile.x}-${tile.y}`).style.display = c[2] ? 'block' : 'none';
         e.querySelector(`#p-w-${tile.x}-${tile.y}`).style.display = c[3] ? 'block' : 'none';
-        
-        // Ensure water follows pipe arms
-        e.querySelector(`#w-n-${tile.x}-${tile.y}`).style.display = c[0] ? 'block' : 'none';
-        e.querySelector(`#w-e-${tile.x}-${tile.y}`).style.display = c[1] ? 'block' : 'none';
-        e.querySelector(`#w-s-${tile.x}-${tile.y}`).style.display = c[2] ? 'block' : 'none';
-        e.querySelector(`#w-w-${tile.x}-${tile.y}`).style.display = c[3] ? 'block' : 'none';
 
         if(!tile.isGlitch && e.classList.contains('glitch')) {
             e.classList.remove('glitch');
@@ -492,8 +454,22 @@
         }
     }
 
+    function updateWaterVisuals(tile, isWet) {
+        // ONLY show water parts that match existing pipes
+        const c = tile.conns;
+        const e = tile.el;
+        
+        e.querySelector(`#w-c-${tile.x}-${tile.y}`).style.display = isWet ? 'block' : 'none';
+        e.querySelector(`#w-n-${tile.x}-${tile.y}`).style.display = (isWet && c[0]) ? 'block' : 'none';
+        e.querySelector(`#w-e-${tile.x}-${tile.y}`).style.display = (isWet && c[1]) ? 'block' : 'none';
+        e.querySelector(`#w-s-${tile.x}-${tile.y}`).style.display = (isWet && c[2]) ? 'block' : 'none';
+        e.querySelector(`#w-w-${tile.x}-${tile.y}`).style.display = (isWet && c[3]) ? 'block' : 'none';
+    }
+
+    // --- INPUT ---
     document.addEventListener('keydown', (e) => {
-        if(isPaused) return;
+        if(isPaused || flowTimer) return; // Block input during flow or quiz
+        
         if(e.key === 'ArrowUp' && zally.y > 0) zally.y--;
         if(e.key === 'ArrowDown' && zally.y < ROWS-1) zally.y++;
         if(e.key === 'ArrowLeft' && zally.x > 0) zally.x--;
@@ -503,8 +479,9 @@
         if(e.key === ' ' || e.code === 'Space') {
             let t = grid[zally.y][zally.x];
             if(!t.fixed && !t.isGlitch) {
-                t.conns.unshift(t.conns.pop());
-                updateVisuals(t);
+                t.conns.unshift(t.conns.pop()); // Rotate
+                updatePipeVisuals(t);
+                resetWater(); // Any change resets flow check
             }
         }
         if(e.key === 'Enter') {
@@ -518,6 +495,7 @@
         document.getElementById('cursor').style.transform = `translate(${zally.x * 80}px, ${zally.y * 80}px)`;
     }
 
+    // --- LOGIC ---
     function openQuiz(tile) {
         isPaused = true;
         const data = CHALLENGES[tile.glitchId];
@@ -542,40 +520,45 @@
             tile.isGlitch = false;
             tile.fixed = false;
             tile.conns = [...PIPES[data.fixType]];
-            updateVisuals(tile);
+            updatePipeVisuals(tile);
             fixedCount++;
             document.getElementById('fixed-count').innerText = fixedCount;
             document.getElementById('integrity').innerText = (fixedCount * 25) + "%";
         } else {
-            alert("Incorrect Prompt. Try again.");
+            alert("Try again!");
         }
     }
 
+    function resetWater() {
+        for(let y=0; y<ROWS; y++) {
+            for(let x=0; x<COLS; x++) {
+                updateWaterVisuals(grid[y][x], false);
+            }
+        }
+        document.getElementById('flow-status').innerText = "OFFLINE";
+        document.getElementById('flow-status').className = "metric-value";
+    }
+
+    // --- NEW FLOW LOGIC (No Flood) ---
     function startFlow() {
-        // Clear Water
-        document.querySelectorAll('.tile').forEach(t => t.classList.remove('wet'));
+        if(flowTimer) return; // Prevent double start
+        resetWater();
+        
         const st = document.getElementById('flow-status');
         st.innerText = "PUMPING...";
         st.className = "metric-value pumping";
 
-        let curr = {x:0, y:0}; // Start
-        let path = [curr];
-        let endReached = false;
+        // Start at 0,0
+        let currentX = 0;
+        let currentY = 0;
         
-        // Simply follow the connection
-        // Logic: Find neighbor that connects TO me
-        
-        // Wet Start
-        grid[0][0].el.classList.add('wet');
-        
-        // Single Path Crawler
-        let delay = 0;
-        let visited = new Set(['0,0']);
-        
-        // Crawler
-        function crawl(x, y) {
-            let t = grid[y][x];
-            let foundNext = false;
+        // Set Start Wet
+        updateWaterVisuals(grid[0][0], true);
+
+        // Flow Loop (Iterative Step-by-Step)
+        flowTimer = setInterval(() => {
+            let t = grid[currentY][currentX];
+            let moved = false;
 
             // Check neighbors
             const dirs = [
@@ -586,44 +569,65 @@
             ];
 
             for(let d of dirs) {
+                // 1. Does current tile have output here?
                 if(t.conns[d.out]) {
-                    let nx = x + d.dx;
-                    let ny = y + d.dy;
-                    if(nx >=0 && nx < COLS && ny >=0 && ny < ROWS) {
-                        let nt = grid[ny][nx];
-                        // If connection matches AND not visited
-                        if(nt.conns[d.in] && !nt.isGlitch && !visited.has(`${nx},${ny}`)) {
-                            visited.add(`${nx},${ny}`);
-                            foundNext = true;
-                            delay++;
-                            setTimeout(() => {
-                                nt.el.classList.add('wet');
-                                if(PATH_MAP[`${nx},${ny}`]?.type === 'E') {
-                                    if(fixedCount === 4) {
-                                        st.innerText = "ONLINE";
-                                        st.className = "metric-value success";
-                                        document.getElementById('modal-win').style.display = 'block';
-                                    }
-                                }
-                            }, delay * 200);
+                    let nx = currentX + d.dx;
+                    let ny = currentY + d.dy;
+
+                    // 2. Is neighbor valid?
+                    if(nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
+                        let nextT = grid[ny][nx];
+                        
+                        // 3. Is neighbor NOT wet yet? (Single path logic)
+                        // 4. Does neighbor accept input?
+                        // 5. Is neighbor NOT broken?
+                        let isNextWet = nextT.el.querySelector('.w-center').style.display === 'block';
+                        
+                        if(!isNextWet && nextT.conns[d.in] && !nextT.isGlitch) {
+                            // MOVE FLOW HERE
+                            updateWaterVisuals(nextT, true);
+                            currentX = nx;
+                            currentY = ny;
+                            moved = true;
                             
-                            // Recursive step
-                            setTimeout(() => crawl(nx, ny), 0); 
-                            break; // Single path
+                            // Check Win
+                            if(PATH_MAP[`${nx},${ny}`]?.type === 'E') {
+                                clearInterval(flowTimer);
+                                flowTimer = null;
+                                if(fixedCount === 4) {
+                                    st.innerText = "ONLINE";
+                                    st.className = "metric-value success";
+                                    document.getElementById('modal-win').style.display = 'block';
+                                } else {
+                                    st.innerText = "UNSTABLE"; // End reached but glitches remain?
+                                    setTimeout(resetWater, 2000);
+                                }
+                            }
+                            break; // Only move once per tick
                         }
                     }
                 }
             }
-            
-            if(!foundNext && delay > 0 && fixedCount < 4) {
-                 setTimeout(() => {
-                     st.innerText = "BLOCKED";
-                     st.className = "metric-value fail";
-                 }, delay * 200 + 500);
-            }
-        }
 
-        crawl(0,0);
+            if(!moved) {
+                // Flow Blocked or End Reached
+                if(!PATH_MAP[`${currentX},${currentY}`]?.type === 'E') {
+                    clearInterval(flowTimer);
+                    flowTimer = null;
+                    st.innerText = "BLOCKED";
+                    st.className = "metric-value fail";
+                    setTimeout(resetWater, 1500);
+                } else if (!moved && PATH_MAP[`${currentX},${currentY}`]?.type !== 'E') {
+                     // Stuck in middle
+                    clearInterval(flowTimer);
+                    flowTimer = null;
+                    st.innerText = "BLOCKED";
+                    st.className = "metric-value fail";
+                    setTimeout(resetWater, 1500);
+                }
+            }
+
+        }, 300); // Speed
     }
 
 </script>
