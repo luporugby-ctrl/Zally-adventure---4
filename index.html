@@ -10,14 +10,11 @@
         :root {
             --bg-color: #202028;
             --panel-bg: #1a1a20;
-            --grid-bg: #000;
-            --pipe-gray: #555;
-            --pipe-border: #222;
-            --water-blue: #00bcd4;
-            --rust-red: #c0392b;
+            --grid-bg: #0d0d10;
             --zalando-orange: #ff6900;
             --success-green: #2ecc71;
             --danger-red: #e74c3c;
+            --water-blue: #00bcd4;
         }
 
         body {
@@ -68,7 +65,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            image-rendering: pixelated; 
+            image-rendering: pixelated;
         }
 
         .profile-name {
@@ -76,12 +73,6 @@
             font-size: 14px;
             margin-bottom: 8px;
             text-shadow: 2px 2px 0 #000;
-            text-transform: uppercase;
-        }
-
-        .profile-role {
-            color: #aaa;
-            font-size: 10px;
             text-transform: uppercase;
         }
 
@@ -97,7 +88,6 @@
         .metric-label { font-size: 10px; color: #888; margin-bottom: 8px; display: block; }
         .metric-value { font-size: 18px; color: #fff; }
 
-        #flow-status { color: #555; transition: color 0.3s; }
         #flow-status.pumping { color: var(--water-blue); animation: blink 0.5s infinite; }
         #flow-status.success { color: var(--success-green); }
         #flow-status.fail { color: var(--danger-red); }
@@ -126,51 +116,26 @@
             height: 80px;
             position: relative;
             box-sizing: border-box;
-            border: 1px solid #222;
+            border: 1px solid #1a1a1a;
         }
 
-        /* --- PIPE STRUCTURE (Layer 1) --- */
-        .pipe-bg {
+        /* --- NEW SPRITE SYSTEM --- */
+        /* Un solo DIV per il tubo, un solo DIV per l'acqua */
+        
+        .sprite {
             position: absolute;
-            background: var(--pipe-gray);
-            border: 4px solid var(--pipe-border);
-            z-index: 1; /* Base Layer */
-            display: none; /* Hidden by default */
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-size: cover;
+            background-repeat: no-repeat;
         }
 
-        /* Center Hub */
-        .p-center { 
-            top: 24px; left: 24px; width: 32px; height: 32px; 
-            display: block; /* Always visible if pipe exists */
-            border: none; 
-            background: var(--pipe-gray);
-            z-index: 1;
-        }
+        .pipe-sprite { z-index: 1; }
+        .water-sprite { z-index: 2; opacity: 0; transition: opacity 0.2s; }
+        .water-sprite.visible { opacity: 1; }
 
-        /* Arms */
-        .p-n { top: 0; left: 24px; width: 32px; height: 32px; border-bottom: none; }
-        .p-e { top: 24px; right: 0; width: 32px; height: 32px; border-left: none; }
-        .p-s { bottom: 0; left: 24px; width: 32px; height: 32px; border-top: none; }
-        .p-w { top: 24px; left: 0; width: 32px; height: 32px; border-right: none; }
-
-        /* --- WATER STRUCTURE (Layer 2) --- */
-        .water-fill {
-            position: absolute;
-            background: var(--water-blue);
-            z-index: 2; /* Top Layer */
-            display: none; /* Strictly hidden */
-        }
-
-        /* Water is slightly smaller than pipe to show "inside" effect */
-        .w-center { top: 28px; left: 28px; width: 24px; height: 24px; }
-        .w-n { top: 0; left: 28px; width: 24px; height: 28px; }
-        .w-e { top: 28px; left: 28px; width: 52px; height: 24px; }
-        .w-s { top: 28px; left: 28px; width: 24px; height: 52px; }
-        .w-w { top: 28px; left: 0; width: 28px; height: 24px; }
-
-        /* --- GLITCH & LABELS --- */
-        .tile.glitch .pipe-bg, .tile.glitch .p-center { background: var(--rust-red); border-color: #58130a; }
-        .glitch-icon {
+        /* Glitch Marker */
+        .glitch-mark {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
@@ -180,6 +145,7 @@
             text-shadow: 2px 2px 0 #000;
         }
 
+        /* Labels */
         .label {
             position: absolute;
             font-size: 8px;
@@ -237,11 +203,9 @@
 <body>
 
     <div class="main-container">
-        <!-- SIDEBAR -->
         <div class="sidebar">
             <div class="zally-profile">
                 <div class="zally-img-container">
-                    <!-- IMAGE -->
                     <img src="zally-water.png" class="zally-avatar" alt="Zally" onerror="this.style.display='none'; this.parentNode.style.background='#ff6900'">
                 </div>
                 <div class="profile-name">ZALLY</div>
@@ -271,7 +235,6 @@
             </div>
         </div>
 
-        <!-- GAME BOARD -->
         <div id="game-board">
             <div id="cursor"></div>
         </div>
@@ -307,11 +270,10 @@
     </div>
 
 <script>
-    // --- CONFIG ---
     const COLS = 8;
     const ROWS = 7;
     
-    // Connections: [North, East, South, West]
+    // [North, East, South, West]
     const PIPES = {
         EMPTY: [0,0,0,0],
         I: [1,0,1,0], H: [0,1,0,1],
@@ -320,7 +282,6 @@
         S: [0,1,0,0], E: [0,0,0,1]
     };
 
-    // Map Layout (Snake Pattern)
     const PATH_MAP = {
         '0,0': {type: 'S', fixed: true},
         '1,0': {type: 'H', fixed: false},
@@ -353,6 +314,39 @@
     let fixedCount = 0;
     let isPaused = true;
     let flowTimer = null;
+    let waterQueue = [];
+
+    // --- SVG GENERATOR (The "Internal Sprite Sheet") ---
+    // Generates SVG data URI based on connections [N,E,S,W]
+    function getPipeSVG(conns, isWater) {
+        const [n, e, s, w] = conns;
+        if (!n && !e && !s && !w) return 'none'; // Empty
+
+        const color = isWater ? '#00bcd4' : '#7f8c8d';
+        const stroke = isWater ? '' : 'stroke="#2c3e50" stroke-width="4"';
+        const size = isWater ? 20 : 32; // Water is thinner (inside pipe)
+        const center = 40;
+        const offset = (80 - size) / 2;
+
+        let paths = [];
+        
+        // Center Hub
+        paths.push(`<rect x="${offset}" y="${offset}" width="${size}" height="${size}" fill="${color}" ${stroke} />`);
+
+        // Arms
+        if(n) paths.push(`<rect x="${offset}" y="0" width="${size}" height="${offset+2}" fill="${color}" ${stroke} />`); // +2 overlap
+        if(e) paths.push(`<rect x="${offset+size-2}" y="${offset}" width="${offset+2}" height="${size}" fill="${color}" ${stroke} />`);
+        if(s) paths.push(`<rect x="${offset}" y="${offset+size-2}" width="${size}" height="${offset+2}" fill="${color}" ${stroke} />`);
+        if(w) paths.push(`<rect x="0" y="${offset}" width="${offset+2}" height="${size}" fill="${color}" ${stroke} />`);
+
+        // If it's a pipe (not water), we need to redraw center on top to hide stroke overlaps
+        if(!isWater) {
+             paths.push(`<rect x="${offset}" y="${offset}" width="${size}" height="${size}" fill="${color}" />`);
+        }
+
+        const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">${paths.join('')}</svg>`;
+        return `url('data:image/svg+xml;utf8,${encodeURIComponent(svgString)}')`;
+    }
 
     function startGame() {
         document.getElementById('modal-start').style.display = 'none';
@@ -364,9 +358,7 @@
 
     function buildGrid() {
         const board = document.getElementById('game-board');
-        const cursor = document.getElementById('cursor');
-        board.innerHTML = '';
-        board.appendChild(cursor);
+        board.innerHTML = '<div id="cursor"></div>';
         grid = [];
 
         for(let y=0; y<ROWS; y++) {
@@ -381,22 +373,15 @@
                     tile.fixed = def.fixed;
                     tile.isGlitch = def.isGlitch || false;
                     tile.glitchId = def.type;
-                    if (tile.isGlitch) {
-                        type = 'H'; 
-                        tile.conns = [0,0,0,0];
-                    } else {
-                        type = def.type;
-                        tile.conns = [...PIPES[type]];
-                    }
+                    type = tile.isGlitch ? 'H' : def.type; 
+                    tile.conns = tile.isGlitch ? [0,0,0,0] : [...PIPES[type]];
                 } else {
-                    // Random Filler
                     const r = Math.random();
                     type = r < 0.3 ? 'I' : (r < 0.6 ? 'H' : 'L_NE');
                     tile.conns = [...PIPES[type]];
                 }
 
                 if (!tile.fixed && !tile.isGlitch) {
-                    // Random Rotate
                     let r = Math.floor(Math.random() * 4);
                     for(let i=0; i<r; i++) tile.conns.unshift(tile.conns.pop());
                 }
@@ -413,20 +398,10 @@
         el.className = 'tile';
         if(tile.isGlitch) el.classList.add('glitch');
 
+        // SINGLE DIV STRATEGY
         let html = `
-            <!-- PIPES (Gray) -->
-            <div class="pipe-bg p-center"></div>
-            <div class="pipe-bg p-n" id="p-n-${tile.x}-${tile.y}"></div>
-            <div class="pipe-bg p-e" id="p-e-${tile.x}-${tile.y}"></div>
-            <div class="pipe-bg p-s" id="p-s-${tile.x}-${tile.y}"></div>
-            <div class="pipe-bg p-w" id="p-w-${tile.x}-${tile.y}"></div>
-            
-            <!-- WATER (Blue) - Hidden by default -->
-            <div class="water-fill w-center" id="w-c-${tile.x}-${tile.y}"></div>
-            <div class="water-fill w-n" id="w-n-${tile.x}-${tile.y}"></div>
-            <div class="water-fill w-e" id="w-e-${tile.x}-${tile.y}"></div>
-            <div class="water-fill w-s" id="w-s-${tile.x}-${tile.y}"></div>
-            <div class="water-fill w-w" id="w-w-${tile.x}-${tile.y}"></div>
+            <div class="sprite pipe-sprite"></div>
+            <div class="sprite water-sprite"></div>
         `;
 
         if(tile.isGlitch) html += `<div class="glitch-mark">⚠️</div>`;
@@ -436,39 +411,28 @@
         el.innerHTML = html;
         container.appendChild(el);
         tile.el = el;
-        updatePipeVisuals(tile);
+        updateVisuals(tile);
     }
 
-    function updatePipeVisuals(tile) {
-        const c = tile.conns;
-        const e = tile.el;
-        // Show Gray Pipes
-        e.querySelector(`#p-n-${tile.x}-${tile.y}`).style.display = c[0] ? 'block' : 'none';
-        e.querySelector(`#p-e-${tile.x}-${tile.y}`).style.display = c[1] ? 'block' : 'none';
-        e.querySelector(`#p-s-${tile.x}-${tile.y}`).style.display = c[2] ? 'block' : 'none';
-        e.querySelector(`#p-w-${tile.x}-${tile.y}`).style.display = c[3] ? 'block' : 'none';
+    function updateVisuals(tile) {
+        // Update Pipe Sprite
+        const pipeDiv = tile.el.querySelector('.pipe-sprite');
+        pipeDiv.style.backgroundImage = getPipeSVG(tile.conns, false);
 
-        if(!tile.isGlitch && e.classList.contains('glitch')) {
-            e.classList.remove('glitch');
-            e.querySelector('.glitch-mark').remove();
+        // Update Water Sprite (Base shape is same as pipe, but hidden)
+        const waterDiv = tile.el.querySelector('.water-sprite');
+        waterDiv.style.backgroundImage = getPipeSVG(tile.conns, true);
+        waterDiv.classList.remove('visible');
+
+        if(!tile.isGlitch && tile.el.classList.contains('glitch')) {
+            tile.el.classList.remove('glitch');
+            tile.el.querySelector('.glitch-mark').remove();
         }
-    }
-
-    function updateWaterVisuals(tile, isWet) {
-        // ONLY show water parts that match existing pipes
-        const c = tile.conns;
-        const e = tile.el;
-        
-        e.querySelector(`#w-c-${tile.x}-${tile.y}`).style.display = isWet ? 'block' : 'none';
-        e.querySelector(`#w-n-${tile.x}-${tile.y}`).style.display = (isWet && c[0]) ? 'block' : 'none';
-        e.querySelector(`#w-e-${tile.x}-${tile.y}`).style.display = (isWet && c[1]) ? 'block' : 'none';
-        e.querySelector(`#w-s-${tile.x}-${tile.y}`).style.display = (isWet && c[2]) ? 'block' : 'none';
-        e.querySelector(`#w-w-${tile.x}-${tile.y}`).style.display = (isWet && c[3]) ? 'block' : 'none';
     }
 
     // --- INPUT ---
     document.addEventListener('keydown', (e) => {
-        if(isPaused || flowTimer) return; // Block input during flow or quiz
+        if(isPaused || flowTimer) return; 
         
         if(e.key === 'ArrowUp' && zally.y > 0) zally.y--;
         if(e.key === 'ArrowDown' && zally.y < ROWS-1) zally.y++;
@@ -479,9 +443,9 @@
         if(e.key === ' ' || e.code === 'Space') {
             let t = grid[zally.y][zally.x];
             if(!t.fixed && !t.isGlitch) {
-                t.conns.unshift(t.conns.pop()); // Rotate
-                updatePipeVisuals(t);
-                resetWater(); // Any change resets flow check
+                t.conns.unshift(t.conns.pop());
+                updateVisuals(t);
+                resetWater(); 
             }
         }
         if(e.key === 'Enter') {
@@ -495,7 +459,7 @@
         document.getElementById('cursor').style.transform = `translate(${zally.x * 80}px, ${zally.y * 80}px)`;
     }
 
-    // --- LOGIC ---
+    // --- QUIZ ---
     function openQuiz(tile) {
         isPaused = true;
         const data = CHALLENGES[tile.glitchId];
@@ -520,7 +484,7 @@
             tile.isGlitch = false;
             tile.fixed = false;
             tile.conns = [...PIPES[data.fixType]];
-            updatePipeVisuals(tile);
+            updateVisuals(tile);
             fixedCount++;
             document.getElementById('fixed-count').innerText = fixedCount;
             document.getElementById('integrity').innerText = (fixedCount * 25) + "%";
@@ -530,104 +494,89 @@
     }
 
     function resetWater() {
-        for(let y=0; y<ROWS; y++) {
-            for(let x=0; x<COLS; x++) {
-                updateWaterVisuals(grid[y][x], false);
-            }
-        }
+        document.querySelectorAll('.water-sprite').forEach(el => el.classList.remove('visible'));
         document.getElementById('flow-status').innerText = "OFFLINE";
         document.getElementById('flow-status').className = "metric-value";
     }
 
-    // --- NEW FLOW LOGIC (No Flood) ---
+    // --- NEW FLOW LOGIC (BFS QUEUE) ---
     function startFlow() {
-        if(flowTimer) return; // Prevent double start
+        if(flowTimer) return;
         resetWater();
-        
+
         const st = document.getElementById('flow-status');
         st.innerText = "PUMPING...";
         st.className = "metric-value pumping";
 
-        // Start at 0,0
-        let currentX = 0;
-        let currentY = 0;
-        
-        // Set Start Wet
-        updateWaterVisuals(grid[0][0], true);
+        let startTile = grid[0][0];
+        startTile.el.querySelector('.water-sprite').classList.add('visible');
+        waterQueue = [startTile];
 
-        // Flow Loop (Iterative Step-by-Step)
         flowTimer = setInterval(() => {
-            let t = grid[currentY][currentX];
-            let moved = false;
+            let nextQueue = [];
+            let movedSomewhere = false;
 
-            // Check neighbors
-            const dirs = [
-                {dx:0, dy:-1, out:0, in:2}, // N
-                {dx:1, dy:0,  out:1, in:3}, // E
-                {dx:0, dy:1,  out:2, in:0}, // S
-                {dx:-1, dy:0, out:3, in:1}  // W
-            ];
+            for (let t of waterQueue) {
+                const dirs = [
+                    {dx:0, dy:-1, out:0, in:2}, // N
+                    {dx:1, dy:0,  out:1, in:3}, // E
+                    {dx:0, dy:1,  out:2, in:0}, // S
+                    {dx:-1, dy:0, out:3, in:1}  // W
+                ];
 
-            for(let d of dirs) {
-                // 1. Does current tile have output here?
-                if(t.conns[d.out]) {
-                    let nx = currentX + d.dx;
-                    let ny = currentY + d.dy;
-
-                    // 2. Is neighbor valid?
-                    if(nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
-                        let nextT = grid[ny][nx];
+                for(let d of dirs) {
+                    // 1. Current has output?
+                    if(t.conns[d.out]) { 
+                        let nx = t.x + d.dx;
+                        let ny = t.y + d.dy;
                         
-                        // 3. Is neighbor NOT wet yet? (Single path logic)
-                        // 4. Does neighbor accept input?
-                        // 5. Is neighbor NOT broken?
-                        let isNextWet = nextT.el.querySelector('.w-center').style.display === 'block';
-                        
-                        if(!isNextWet && nextT.conns[d.in] && !nextT.isGlitch) {
-                            // MOVE FLOW HERE
-                            updateWaterVisuals(nextT, true);
-                            currentX = nx;
-                            currentY = ny;
-                            moved = true;
+                        if(nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
+                            let nextT = grid[ny][nx];
+                            let waterDiv = nextT.el.querySelector('.water-sprite');
                             
-                            // Check Win
-                            if(PATH_MAP[`${nx},${ny}`]?.type === 'E') {
-                                clearInterval(flowTimer);
-                                flowTimer = null;
-                                if(fixedCount === 4) {
-                                    st.innerText = "ONLINE";
-                                    st.className = "metric-value success";
-                                    document.getElementById('modal-win').style.display = 'block';
-                                } else {
-                                    st.innerText = "UNSTABLE"; // End reached but glitches remain?
-                                    setTimeout(resetWater, 2000);
+                            // 2. Next has input AND not glitch AND not already wet
+                            if(nextT.conns[d.in] && !nextT.isGlitch && !waterDiv.classList.contains('visible')) {
+                                waterDiv.classList.add('visible');
+                                nextQueue.push(nextT);
+                                movedSomewhere = true;
+
+                                if(PATH_MAP[`${nx},${ny}`]?.type === 'E') {
+                                    checkWinCondition(st);
+                                    return; 
                                 }
                             }
-                            break; // Only move once per tick
                         }
                     }
                 }
             }
+            waterQueue = nextQueue;
 
-            if(!moved) {
-                // Flow Blocked or End Reached
-                if(!PATH_MAP[`${currentX},${currentY}`]?.type === 'E') {
-                    clearInterval(flowTimer);
-                    flowTimer = null;
-                    st.innerText = "BLOCKED";
-                    st.className = "metric-value fail";
-                    setTimeout(resetWater, 1500);
-                } else if (!moved && PATH_MAP[`${currentX},${currentY}`]?.type !== 'E') {
-                     // Stuck in middle
-                    clearInterval(flowTimer);
-                    flowTimer = null;
+            // If no moves, blocked
+            if(waterQueue.length === 0 || !movedSomewhere) {
+                clearInterval(flowTimer);
+                flowTimer = null;
+                if (document.getElementById('modal-win').style.display !== 'block') {
                     st.innerText = "BLOCKED";
                     st.className = "metric-value fail";
                     setTimeout(resetWater, 1500);
                 }
             }
 
-        }, 300); // Speed
+        }, 300);
+    }
+
+    function checkWinCondition(st) {
+        clearInterval(flowTimer);
+        flowTimer = null;
+        if(fixedCount === 4) {
+            st.innerText = "ONLINE";
+            st.className = "metric-value success";
+            document.getElementById('modal-win').style.display = 'block';
+        } else {
+            st.innerText = "UNSTABLE";
+            alert("Flow incomplete! Fix glitches first.");
+            setTimeout(resetWater, 2000);
+        }
     }
 
 </script>
