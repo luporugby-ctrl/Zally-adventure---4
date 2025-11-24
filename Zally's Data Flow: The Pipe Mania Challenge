@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zally's Data Flow: Pipe Mania Ops</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        :root {
+            --zalando-orange: #ff6900;
+            --zalando-black: #1a1a1a;
+            --gemini-blue: #4285f4;
+            --pipe-color: #555;
+            --water-color: #00bcd4;
+            --bg-color: #222;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            border: 4px solid var(--zalando-orange);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            background-color: #111;
+            display: block;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border: 2px solid white;
+        }
+
+        #message-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--zalando-black);
+            border: 4px solid var(--gemini-blue);
+            padding: 20px;
+            text-align: center;
+            max-width: 80%;
+            display: none; /* Hidden by default */
+            box-shadow: 0 0 30px var(--gemini-blue);
+            z-index: 100;
+        }
+
+        #gemini-prompt-ui {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            background: white;
+            color: black;
+            border: 4px solid var(--gemini-blue);
+            padding: 15px;
+            display: none;
+            font-family: 'Arial', sans-serif; /* Readable font for prompts */
+            box-shadow: 0 -5px 20px rgba(66, 133, 244, 0.5);
+        }
+
+        .gemini-option {
+            background: #f1f1f1;
+            margin: 5px 0;
+            padding: 10px;
+            cursor: pointer;
+            border: 2px solid #ccc;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .gemini-option:hover, .gemini-option.selected {
+            background: var(--gemini-blue);
+            color: white;
+            border-color: darkblue;
+        }
+
+        h1 { font-size: 20px; color: var(--zalando-orange); margin-bottom: 10px; }
+        p { font-size: 12px; line-height: 1.5; margin-bottom: 15px; }
+        .btn {
+            background: var(--zalando-orange);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-family: 'Press Start 2P', cursive;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn:hover { background: #d95a00; }
+
+        /* Mobile Controls */
+        #mobile-controls {
+            display: none;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        @media (max-width: 800px) {
+            #mobile-controls { display: flex; flex-wrap: wrap; justify-content: center;}
+            .ctrl-btn { width: 60px; height: 60px; background: #444; color: white; border: 2px solid #fff; font-size: 20px; }
+            canvas { width: 100%; max-width: 400px; height: auto; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+        
+        <div id="ui-overlay">
+            <div class="stat-box">LEVEL: <span id="level-display">1</span></div>
+            <div class="stat-box">FLOW IN: <span id="timer-display">30</span>s</div>
+        </div>
+
+        <!-- Start / Game Over / Win Screens -->
+        <div id="message-modal">
+            <h1 id="modal-title">Zally's Data Flow</h1>
+            <p id="modal-text">Connect the pipes from RAW DATA to REPORT before the flow starts!</p>
+            <p style="font-size: 10px; color: #aaa;">Controls: Arrows to Move, SPACE to Rotate, ENTER for Gemini</p>
+            <button class="btn" id="modal-btn">START GAME</button>
+        </div>
+
+        <!-- Gemini Interaction UI -->
+        <div id="gemini-prompt-ui">
+            <div style="display:flex; align-items:center; margin-bottom:10px;">
+                <span style="font-size:24px; margin-right:10px;">✨</span>
+                <strong>Gemini Assistant</strong>
+            </div>
+            <p id="gemini-question">The data pipe is broken! How do we fix it?</p>
+            <div id="gemini-options">
+                <!-- Options injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <div id="mobile-controls">
+        <button class="ctrl-btn" ontouchstart="simulateKey('ArrowUp')">⬆️</button>
+        <div style="width:100%; display:flex; justify-content:center; gap:10px;">
+            <button class="ctrl-btn" ontouchstart="simulateKey('ArrowLeft')">⬅️</button>
+            <button class="ctrl-btn" ontouchstart="simulateKey('ArrowDown')">⬇️</button>
+            <button class="ctrl-btn" ontouchstart="simulateKey('ArrowRight')">➡️</button>
+        </div>
+        <button class="ctrl-btn" style="width:120px; background:var(--zalando-orange);" ontouchstart="simulateKey(' ')">ROTATE</button>
+        <button class="ctrl-btn" style="width:120px; background:var(--gemini-blue);" ontouchstart="simulateKey('Enter')">GEMINI</button>
+    </div>
+
+<script>
+/**
+ * ZALLY'S DATA FLOW - GAME ENGINE
+ * * Concept: 
+ * Grid based puzzle. Pipes must connect Start (Top Left) to End (Bottom Right).
+ * Player controls Zally character.
+ * Regular pipes can be rotated with Space.
+ * "Glitch" pipes (Red) require Gemini (Enter) to solve a quiz prompt to become usable.
+ */
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// --- GAME CONFIG ---
+const TILE_SIZE = 60;
+const COLS = 10;
+const ROWS = 10;
+const GAME_WIDTH = COLS * TILE_SIZE;
+const GAME_HEIGHT = ROWS * TILE_SIZE;
+
+// --- ASSETS (Generated via Code) ---
+const PALETTE = {
+    bg: '#222',
+    grid: '#333',
+    pipe: '#666',
+    water: '#00bcd4', // Cyan
+    glitch: '#e91e63', // Red/Pink
+    zallyBody: '#ff6900', // Zalando Orange
+    zallyHat: '#005c9e' // Blue
+};
+
+// --- STATE MANAGEMENT ---
+let gameState = 'START'; // START, PLAYING, GEMINI_MODE, FLOWING, GAMEOVER, WIN
+let currentLevel = 1;
+let zally = { x: 0, y: 0 };
+let grid = [];
+let flowTimer = 30;
+let flowInterval = null;
+let flowPath = []; // Stores the path of water
+let waterProgress = 0; // Animation frame for water
+
+// Level Definitions
+const LEVELS = [
+    {
+        id: 1,
+        title: "Level 1: Dirty Data",
+        desc: "The supplier data is messy! Use Smart Fill to clean the pipes.",
+        time: 40,
+        layout: 'simple',
+        glitchCount: 2,
+        geminiTask: 'cleaning'
+    },
+    {
+        id: 2,
+        title: "Level 2: The Formula Gap",
+        desc: "We need to calculate totals. Don't write manual math, ask Gemini!",
+        time: 35,
+        layout: 'corners',
+        glitchCount: 3,
+        geminiTask: 'formula'
+    },
+    {
+        id: 3,
+        title: "Level 3: Logic Junction",
+        desc: "Connect the Order Status to the Tracker. Use Cross-Referencing.",
+        time: 30,
+        layout: 'complex',
+        glitchCount: 4,
+        geminiTask: 'logic'
+    },
+    {
+        id: 4,
+        title: "Level 4: Visualization",
+        desc: "Final Report! Build a path to the Dashboard.",
+        time: 25,
+        layout: 'chaos',
+        glitchCount: 5,
+        geminiTask: 'chart'
+    }
+];
+
+const GEMINI_QUESTIONS = {
+    cleaning: {
+        q: "The addresses are mixed (Berlin, DE - 10243). How do you clean them?",
+        options: [
+            { text: "Write a complex REGEX formula manually.", correct: false },
+            { text: "Use Smart Fill to detect the pattern.", correct: true },
+            { text: "Edit each cell one by one.", correct: false }
+        ]
+    },
+    formula: {
+        q: "You need to multiply Price * Qty only if Status is 'Shipped'.",
+        options: [
+            { text: "Prompt: 'Calculate total if shipped'", correct: true },
+            { text: "Type =IF(C2='Shipped', A2*B2, ...)", correct: false },
+            { text: "Use a calculator app.", correct: false }
+        ]
+    },
+    logic: {
+        q: "We need Supplier Names from another sheet based on ID.",
+        options: [
+            { text: "Copy paste manually.", correct: false },
+            { text: "Prompt: 'Look up Supplier Name from Sheet2'", correct: true },
+            { text: "Panic and cry.", correct: false }
+        ]
+    },
+    chart: {
+        q: "The boss wants a bar chart of top sellers ASAP.",
+        options: [
+            { text: "Draw it on paper.", correct: false },
+            { text: "Select Data > Insert > Chart > Customize...", correct: false },
+            { text: "Prompt: 'Create a bar chart of Sales by Brand'", correct: true }
+        ]
+    }
+};
+
+// --- GRID & PIPE LOGIC ---
+// Pipe Types: [North, East, South, West] (1 = Open, 0 = Closed)
+const PIPE_TYPES = {
+    STRAIGHT: [1, 0, 1, 0], // |
+    ELBOW: [1, 1, 0, 0],    // L
+    TEE: [1, 1, 1, 0],      // T
+    CROSS: [1, 1, 1, 1],    // +
+    START: [0, 1, 0, 0],    // Start point (Flows Right)
+    END: [0, 0, 0, 1]       // End point (Accepts Left)
+};
+
+class Tile {
+    constructor(x, y, type, locked = false) {
+        this.x = x;
+        this.y = y;
+        this.baseType = type; // The shape (STRAIGHT, ELBOW, etc)
+        this.connections = [...type]; // Current rotation state
+        this.rotation = 0; // 0, 1, 2, 3 (x90deg)
+        this.isGlitch = locked; // If true, acts as a wall until fixed
+        this.isFixed = !locked;
+        this.hasWater = false;
+        
+        // Randomize initial rotation for non-start/end
+        if(!this.isStart() && !this.isEnd()) {
+            let r = Math.floor(Math.random() * 4);
+            for(let i=0; i<r; i++) this.rotate();
+        }
+    }
+
+    rotate() {
+        if (!this.isFixed) return; // Cannot rotate glitch tiles
+        if (this.isStart() || this.isEnd()) return;
+
+        // Shift array right: [N, E, S, W] -> [W, N, E, S]
+        this.connections.unshift(this.connections.pop());
+        this.rotation = (this.rotation + 1) % 4;
+    }
+
+    isStart() { return this.x === 0 && this.y === 0; }
+    isEnd() { return this.x === COLS-1 && this.y === ROWS-1; }
+}
+
+// --- INITIALIZATION ---
+
+function initGame() {
+    setupLevel(1);
+    showModal('START');
+}
+
+function setupLevel(lvlNum) {
+    currentLevel = lvlNum;
+    const levelConfig = LEVELS[currentLevel - 1];
+    flowTimer = levelConfig.time;
+    document.getElementById('level-display').innerText = currentLevel;
+    document.getElementById('timer-display').innerText = flowTimer;
+
+    // Reset Grid
+    grid = [];
+    zally = { x: 0, y: 0 };
+    flowPath = [];
+    waterProgress = 0;
+
+    // Generate Pipes
+    for (let y = 0; y < ROWS; y++) {
+        let row = [];
+        for (let x = 0; x < COLS; x++) {
+            let type = PIPE_TYPES.STRAIGHT;
+            let isGlitch = false;
+
+            // Simple map generation logic
+            let rand = Math.random();
+            if (rand < 0.4) type = PIPE_TYPES.ELBOW;
+            else if (rand < 0.6) type = PIPE_TYPES.TEE;
+            else if (rand < 0.7) type = PIPE_TYPES.CROSS;
+
+            // Start & End overrides
+            if (x === 0 && y === 0) type = PIPE_TYPES.START;
+            else if (x === COLS-1 && y === ROWS-1) type = PIPE_TYPES.END;
+            else {
+                // Add glitches randomly based on level config
+                if (Math.random() < (levelConfig.glitchCount / (COLS*ROWS)) * 3) {
+                    isGlitch = true;
+                }
+            }
+
+            row.push(new Tile(x, y, type, isGlitch));
+        }
+        grid.push(row);
+    }
+    
+    // Ensure Start works
+    grid[0][0].connections = [0, 1, 0, 0]; // Points East
+}
+
+// --- INPUT HANDLING ---
+
+document.addEventListener('keydown', (e) => {
+    if (gameState === 'GEMINI_MODE') return; // Input blocked by UI
+    if (gameState !== 'PLAYING') return;
+
+    switch(e.key) {
+        case 'ArrowUp': if(zally.y > 0) zally.y--; break;
+        case 'ArrowDown': if(zally.y < ROWS-1) zally.y++; break;
+        case 'ArrowLeft': if(zally.x > 0) zally.x--; break;
+        case 'ArrowRight': if(zally.x < COLS-1) zally.x++; break;
+        case ' ': // Spacebar
+            let tile = grid[zally.y][zally.x];
+            tile.rotate();
+            playSound('rotate');
+            break;
+        case 'Enter':
+            checkGeminiAction();
+            break;
+    }
+    draw();
+});
+
+// Helper for mobile buttons
+window.simulateKey = (key) => {
+    const event = new KeyboardEvent('keydown', { key: key });
+    document.dispatchEvent(event);
+};
+
+// --- GEMINI MECHANIC ---
+
+function checkGeminiAction() {
+    let tile = grid[zally.y][zally.x];
+    if (tile.isGlitch && !tile.isFixed) {
+        triggerGeminiMode();
+    }
+}
+
+function triggerGeminiMode() {
+    gameState = 'GEMINI_MODE';
+    const levelData = LEVELS[currentLevel-1];
+    const quiz = GEMINI_QUESTIONS[levelData.geminiTask];
+
+    const ui = document.getElementById('gemini-prompt-ui');
+    const qText = document.getElementById('gemini-question');
+    const optsDiv = document.getElementById('gemini-options');
+
+    qText.innerText = quiz.q;
+    optsDiv.innerHTML = '';
+
+    quiz.options.forEach(opt => {
+        let btn = document.createElement('div');
+        btn.className = 'gemini-option';
+        btn.innerText = opt.text;
+        btn.onclick = () => resolveGemini(opt.correct);
+        optsDiv.appendChild(btn);
+    });
+
+    ui.style.display = 'block';
+}
+
+function resolveGemini(isCorrect) {
+    document.getElementById('gemini-prompt-ui').style.display = 'none';
+    
+    if (isCorrect) {
+        let tile = grid[zally.y][zally.x];
+        tile.isGlitch = false;
+        tile.isFixed = true;
+        // Visual effect
+        playSound('success');
+        gameState = 'PLAYING';
+    } else {
+        playSound('error');
+        // Penalty? Maybe loose time.
+        flowTimer = Math.max(5, flowTimer - 5);
+        document.getElementById('timer-display').innerText = flowTimer;
+        gameState = 'PLAYING';
+    }
+    draw();
+}
+
+
+// --- GAME LOOP & LOGIC ---
+
+function startTimer() {
+    clearInterval(flowInterval);
+    flowInterval = setInterval(() => {
+        if (gameState !== 'PLAYING') return;
+        
+        flowTimer--;
+        document.getElementById('timer-display').innerText = flowTimer;
+
+        if (flowTimer <= 0) {
+            startFlow();
+        }
+    }, 1000);
+}
+
+function startFlow() {
+    clearInterval(flowInterval);
+    gameState = 'FLOWING';
+    calculateFlowPath();
+}
+
+function calculateFlowPath() {
+    // BFS to find path of water
+    // Start at 0,0. It emits East (Index 1).
+    // We trace connected pipes.
+    
+    // Simple Path Tracer
+    let path = [{x:0, y:0}];
+    let visited = new Set(['0,0']);
+    let current = {x:0, y:0, entry: 3}; // Entry 3 means entered from West (so we look at current tile's West connection)
+    
+    // Simulate flow step by step
+    let flowing = true;
+    let currX = 0;
+    let currY = 0;
+    
+    // We need a direction. Start tile [0,0] sends East.
+    // Directions: 0:N, 1:E, 2:S, 3:W
+    let comingFrom = 3; // Initially coming from "West" (imaginary) into Start
+
+    let stack = [{x:0, y:0}];
+    
+    // Real-time animation logic handled in update()
+    // Here we just validate win condition roughly
+}
+
+// Simplified Flow Logic for Arcade Feel:
+// Water expands from source every frame if connected
+function updateWater() {
+    if (gameState !== 'FLOWING') return;
+
+    // Slow down water expansion for visual effect
+    waterProgress++;
+    if (waterProgress % 10 !== 0) return; 
+
+    // Find all tiles with water
+    let waterTiles = [];
+    for(let y=0; y<ROWS; y++) {
+        for(let x=0; x<COLS; x++) {
+            if (grid[y][x].hasWater) waterTiles.push(grid[y][x]);
+        }
+    }
+    
+    // If no water, init start
+    if (waterTiles.length === 0) {
+        grid[0][0].hasWater = true;
+        return;
+    }
+
+    let spread = false;
+
+    // For each wet tile, check neighbors
+    waterTiles.forEach(tile => {
+        let dirs = tile.connections; // [N, E, S, W]
+        
+        // North
+        if (dirs[0] && tile.y > 0) {
+            let neighbor = grid[tile.y - 1][tile.x];
+            // Check if neighbor connects South (index 2)
+            if (neighbor.connections[2] && !neighbor.hasWater && !neighbor.isGlitch) {
+                neighbor.hasWater = true;
+                spread = true;
+            }
+        }
+        // East
+        if (dirs[1] && tile.x < COLS-1) {
+            let neighbor = grid[tile.y][tile.x + 1];
+            // Check if neighbor connects West (index 3)
+            if (neighbor.connections[3] && !neighbor.hasWater && !neighbor.isGlitch) {
+                neighbor.hasWater = true;
+                spread = true;
+            }
+        }
+        // South
+        if (dirs[2] && tile.y < ROWS-1) {
+            let neighbor = grid[tile.y + 1][tile.x];
+            // Check if neighbor connects North (index 0)
+            if (neighbor.connections[0] && !neighbor.hasWater && !neighbor.isGlitch) {
+                neighbor.hasWater = true;
+                spread = true;
+            }
+        }
+        // West
+        if (dirs[3] && tile.x > 0) {
+            let neighbor = grid[tile.y][tile.x - 1];
+            // Check if neighbor connects East (index 1)
+            if (neighbor.connections[1] && !neighbor.hasWater && !neighbor.isGlitch) {
+                neighbor.hasWater = true;
+                spread = true;
+            }
+        }
+    });
+
+    if (!spread) {
+        // Flow stopped. Check win.
+        let endTile = grid[ROWS-1][COLS-1];
+        if (endTile.hasWater) {
+            gameState = 'WIN';
+            setTimeout(() => showModal('WIN'), 1000);
+        } else {
+            // Check if actually stuck or just filling
+            // For this simplified version, if water stops and End isn't wet -> Game Over
+            gameState = 'GAMEOVER';
+            setTimeout(() => showModal('GAMEOVER'), 1000);
+        }
+    }
+}
+
+
+// --- RENDERING ---
+
+function draw() {
+    ctx.fillStyle = PALETTE.bg;
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    // Draw Grid
+    for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+            drawTile(grid[y][x], x * TILE_SIZE, y * TILE_SIZE);
+        }
+    }
+
+    // Draw Zally
+    drawZally(zally.x * TILE_SIZE, zally.y * TILE_SIZE);
+
+    if (gameState === 'FLOWING') updateWater();
+    if (gameState === 'FLOWING') requestAnimationFrame(draw);
+}
+
+function drawTile(tile, x, y) {
+    const cx = x + TILE_SIZE/2;
+    const cy = y + TILE_SIZE/2;
+    const w = TILE_SIZE/4; // Pipe width
+
+    // Background
+    ctx.strokeStyle = PALETTE.grid;
+    ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+
+    // Glitch State
+    if (tile.isGlitch && !tile.isFixed) {
+        ctx.fillStyle = 'rgba(233, 30, 99, 0.3)';
+        ctx.fillRect(x+2, y+2, TILE_SIZE-4, TILE_SIZE-4);
+        ctx.fillStyle = '#fff';
+        ctx.font = '20px Arial';
+        ctx.fillText('?', cx-5, cy+7);
+        return; // Don't draw connections if glitch
+    }
+
+    // Pipe Color
+    ctx.fillStyle = tile.hasWater ? PALETTE.water : PALETTE.pipe;
+
+    // Draw Center
+    ctx.fillRect(cx - w/2, cy - w/2, w, w);
+
+    // Draw Connections
+    // N
+    if (tile.connections[0]) ctx.fillRect(cx - w/2, y, w, TILE_SIZE/2);
+    // E
+    if (tile.connections[1]) ctx.fillRect(cx, cy - w/2, TILE_SIZE/2, w);
+    // S
+    if (tile.connections[2]) ctx.fillRect(cx - w/2, cy, w, TILE_SIZE/2);
+    // W
+    if (tile.connections[3]) ctx.fillRect(x, cy - w/2, TILE_SIZE/2, w);
+
+    // Start/End Labels
+    if (tile.isStart()) {
+        ctx.fillStyle = '#FFF';
+        ctx.font = '10px Arial';
+        ctx.fillText('DATA', x+5, y+15);
+    }
+    if (tile.isEnd()) {
+        ctx.fillStyle = '#FFF';
+        ctx.font = '10px Arial';
+        ctx.fillText('REPORT', x+2, y+55);
+    }
+}
+
+function drawZally(x, y) {
+    // Highlight Box
+    ctx.strokeStyle = PALETTE.zallyBody;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+    
+    // Simple Zally Sprite (Head + Hat)
+    const cx = x + TILE_SIZE/2;
+    const cy = y + TILE_SIZE/2;
+
+    // Face
+    ctx.fillStyle = '#e4a672'; // Skin
+    ctx.beginPath();
+    ctx.arc(cx, cy, 10, 0, Math.PI*2);
+    ctx.fill();
+
+    // Hat (Mario/Plumber style)
+    ctx.fillStyle = PALETTE.zallyHat;
+    ctx.fillRect(cx - 12, cy - 14, 24, 8); // Brim
+    ctx.fillRect(cx - 8, cy - 20, 16, 10); // Top
+
+    // Eyes
+    ctx.fillStyle = 'black';
+    ctx.fillRect(cx - 4, cy - 2, 2, 2);
+    ctx.fillRect(cx + 2, cy - 2, 2, 2);
+}
+
+// --- UI MANAGAMENT ---
+
+function showModal(type) {
+    const modal = document.getElementById('message-modal');
+    const title = document.getElementById('modal-title');
+    const text = document.getElementById('modal-text');
+    const btn = document.getElementById('modal-btn');
+
+    modal.style.display = 'block';
+
+    if (type === 'START') {
+        const lvl = LEVELS[currentLevel-1];
+        title.innerText = lvl.title;
+        text.innerText = lvl.desc + "\n\nControls:\nARROWS: Move Zally\nSPACE: Rotate Pipe\nENTER: Gemini Fix";
+        btn.innerText = "START LEVEL";
+        btn.onclick = () => {
+            modal.style.display = 'none';
+            gameState = 'PLAYING';
+            startTimer();
+            draw();
+        };
+    } else if (type === 'GAMEOVER') {
+        title.innerText = "DATA LEAK!";
+        text.innerText = "The report failed. The data spilled everywhere.";
+        btn.innerText = "TRY AGAIN";
+        btn.onclick = () => {
+            setupLevel(currentLevel);
+            showModal('START');
+        };
+    } else if (type === 'WIN') {
+        title.innerText = "FLOW PERFECT!";
+        text.innerText = "Gemini optimized the pipeline successfully.";
+        
+        if (currentLevel < LEVELS.length) {
+            btn.innerText = "NEXT LEVEL";
+            btn.onclick = () => {
+                setupLevel(currentLevel + 1);
+                showModal('START');
+            };
+        } else {
+            title.innerText = "CHAMPION!";
+            text.innerText = "You have mastered Gemini Ops workflow!";
+            btn.innerText = "RESTART";
+            btn.onclick = () => initGame();
+        }
+    }
+}
+
+function playSound(type) {
+    // Placeholder for audio. 
+    // In a real browser game, would use AudioContext.
+    // console.log("Sound:", type);
+}
+
+// --- BOOTSTRAP ---
+window.onload = initGame;
+
+</script>
+</body>
+</html>
