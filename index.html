@@ -159,6 +159,7 @@
             background: var(--water-color);
             z-index: 3;
             display: none; /* Hidden by default */
+            transition: all 0.2s linear;
         }
 
         .tile.wet .water-layer { display: block; }
@@ -248,7 +249,7 @@
                 <div class="zally-img-container">
                     <img src="zally-water.jpg" class="zally-avatar" alt="Zally" onerror="this.src='https://via.placeholder.com/120/ff6900/ffffff?text=Z'">
                 </div>
-                <div class="profile-name">ZALLY OPS</div>
+                <div class="profile-name">ZALLY</div>
                 <div class="profile-role">PIPELINE ENGINEER</div>
             </div>
 
@@ -386,6 +387,7 @@
     let zally = {x:0, y:0};
     let fixedCount = 0;
     let isPaused = true;
+    let flowInProgress = false;
 
     function startGame() {
         document.getElementById('modal-start').style.display = 'none';
@@ -475,12 +477,13 @@
     function updateVisuals(tile) {
         const c = tile.conns;
         const e = tile.el;
+        // Show/Hide pipe arms based on connection logic
         e.querySelector(`#p-n-${tile.x}-${tile.y}`).style.display = c[0] ? 'block' : 'none';
         e.querySelector(`#p-e-${tile.x}-${tile.y}`).style.display = c[1] ? 'block' : 'none';
         e.querySelector(`#p-s-${tile.x}-${tile.y}`).style.display = c[2] ? 'block' : 'none';
         e.querySelector(`#p-w-${tile.x}-${tile.y}`).style.display = c[3] ? 'block' : 'none';
         
-        // Ensure water follows pipe arms
+        // Ensure water follows pipe arms visibility
         e.querySelector(`#w-n-${tile.x}-${tile.y}`).style.display = c[0] ? 'block' : 'none';
         e.querySelector(`#w-e-${tile.x}-${tile.y}`).style.display = c[1] ? 'block' : 'none';
         e.querySelector(`#w-s-${tile.x}-${tile.y}`).style.display = c[2] ? 'block' : 'none';
@@ -493,7 +496,7 @@
     }
 
     document.addEventListener('keydown', (e) => {
-        if(isPaused) return;
+        if(isPaused || flowInProgress) return;
         if(e.key === 'ArrowUp' && zally.y > 0) zally.y--;
         if(e.key === 'ArrowDown' && zally.y < ROWS-1) zally.y++;
         if(e.key === 'ArrowLeft' && zally.x > 0) zally.x--;
@@ -552,32 +555,27 @@
     }
 
     function startFlow() {
+        if(flowInProgress) return;
+        flowInProgress = true;
+        
         // Clear Water
         document.querySelectorAll('.tile').forEach(t => t.classList.remove('wet'));
         const st = document.getElementById('flow-status');
         st.innerText = "PUMPING...";
         st.className = "metric-value pumping";
 
-        let curr = {x:0, y:0}; // Start
-        let path = [curr];
+        let visited = new Set(['0,0']);
         let endReached = false;
         
-        // Simply follow the connection
-        // Logic: Find neighbor that connects TO me
-        
-        // Wet Start
+        // Activate Start
         grid[0][0].el.classList.add('wet');
         
-        // Single Path Crawler
-        let delay = 0;
-        let visited = new Set(['0,0']);
-        
-        // Crawler
+        // Single path crawler
+        // Logic: Water only flows if current pipe OUT connects to next pipe IN
         function crawl(x, y) {
             let t = grid[y][x];
-            let foundNext = false;
+            let foundPath = false;
 
-            // Check neighbors
             const dirs = [
                 {dx:0, dy:-1, out:0, in:2}, // N
                 {dx:1, dy:0,  out:1, in:3}, // E
@@ -585,45 +583,63 @@
                 {dx:-1, dy:0, out:3, in:1}  // W
             ];
 
-            for(let d of dirs) {
-                if(t.conns[d.out]) {
+            // Check all valid connections from this tile
+            for (let d of dirs) {
+                // If current pipe has an opening in this direction
+                if (t.conns[d.out]) {
                     let nx = x + d.dx;
                     let ny = y + d.dy;
-                    if(nx >=0 && nx < COLS && ny >=0 && ny < ROWS) {
+                    
+                    if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
                         let nt = grid[ny][nx];
-                        // If connection matches AND not visited
-                        if(nt.conns[d.in] && !nt.isGlitch && !visited.has(`${nx},${ny}`)) {
+                        
+                        // Check if next pipe connects BACK to us
+                        if (nt.conns[d.in] && !nt.isGlitch && !visited.has(`${nx},${ny}`)) {
+                            
                             visited.add(`${nx},${ny}`);
-                            foundNext = true;
-                            delay++;
+                            foundPath = true;
+                            
+                            // Visual Delay for flow effect
                             setTimeout(() => {
                                 nt.el.classList.add('wet');
-                                if(PATH_MAP[`${nx},${ny}`]?.type === 'E') {
-                                    if(fixedCount === 4) {
+                                if (PATH_MAP[`${nx},${ny}`]?.type === 'E') {
+                                    // End Reached
+                                    if (fixedCount === 4) {
                                         st.innerText = "ONLINE";
                                         st.className = "metric-value success";
                                         document.getElementById('modal-win').style.display = 'block';
+                                        flowInProgress = false;
+                                    } else {
+                                         // Reached end but not all fixed (shouldn't happen with current logic but failsafe)
+                                         st.innerText = "UNSTABLE";
+                                         st.className = "metric-value fail";
+                                         flowInProgress = false;
                                     }
+                                } else {
+                                    // Continue crawling
+                                    crawl(nx, ny);
                                 }
-                            }, delay * 200);
-                            
-                            // Recursive step
-                            setTimeout(() => crawl(nx, ny), 0); 
-                            break; // Single path
+                            }, 300);
+                            return; // Stop looking for other paths, water flows one way in this linear map
                         }
                     }
                 }
             }
-            
-            if(!foundNext && delay > 0 && fixedCount < 4) {
-                 setTimeout(() => {
-                     st.innerText = "BLOCKED";
-                     st.className = "metric-value fail";
-                 }, delay * 200 + 500);
+
+            // If we are here and foundPath is false, water stopped
+            if (!foundPath) {
+                setTimeout(() => {
+                    if(!endReached) {
+                        st.innerText = "BLOCKED";
+                        st.className = "metric-value fail";
+                        flowInProgress = false;
+                    }
+                }, 300);
             }
         }
 
-        crawl(0,0);
+        // Start Crawl after initial delay
+        setTimeout(() => crawl(0, 0), 300);
     }
 
 </script>
