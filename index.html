@@ -334,7 +334,7 @@
             <div class="metrics-box">
                 <div class="metric-row">
                     <span class="metric-label">PIPES FIXED</span>
-                    <span class="metric-value"><span id="fixed-count">0</span> / 4</span>
+                    <span class="metric-value"><span id="fixed-count">0</span> / 5</span>
                 </div>
                 <div class="metric-row">
                     <span class="metric-label">INTEGRITY</span>
@@ -370,7 +370,7 @@
                 WELCOME, ZALLY.<br><br>
                 THE OPERATIONS PIPELINE IS BROKEN.<br>CRITICAL DATA IS NOT REACHING THE DASHBOARD.<br><br>
                 YOUR MISSION:<br>
-                1. LOCATE THE 4 RED GLITCHES.<br>
+                1. LOCATE THE 5 RED GLITCHES.<br>
                 2. PRESS [ENTER] TO DEPLOY GEMINI.<br>
                 3. PRESS [SPACE] TO ALIGN PIPES.<br>
                 4. PRESS [F] TO ACTIVATE FLOW.
@@ -404,8 +404,8 @@
                 THE PIPELINE IS FULLY OPERATIONAL.<br><br>
                 IMPACT ACHIEVED:<br>
                 > SUPPLIER DATA ORGANIZED<br>
-                > COMPLEX CALCULATIONS AUTOMATED<br>
-                > REPORTS FORMATTED INSTANTLY<br>
+                > COMPLEX FORMULAS AUTOMATED<br>
+                > PIVOT TABLES GENERATED<br>
                 > INSIGHTS UNLOCKED
             </p>
             <button class="btn-arcade" style="text-align:center" onclick="showBonus()">UNLOCK BONUS ITEM</button>
@@ -466,26 +466,33 @@
         S: [0,1,0,0], E: [0,0,0,1]
     };
 
+    // UPDATED PATH MAP FOR 5 CHALLENGES
     const PATH_MAP = {
         '0,0': {type: 'S', fixed: true},
         '1,0': {type: 'H', fixed: false},
-        '2,0': {type: 'G1', fixed: false, isGlitch: true},
+        '2,0': {type: 'G1', fixed: false, isGlitch: true}, // Challenge 1
         '3,0': {type: 'L_SW', fixed: false},
         '3,1': {type: 'I', fixed: false},
         '3,2': {type: 'L_WN', fixed: false},
-        '2,2': {type: 'G2', fixed: false, isGlitch: true},
+        '2,2': {type: 'G2', fixed: false, isGlitch: true}, // Challenge 2
         '1,2': {type: 'L_ES', fixed: false},
         '1,3': {type: 'I', fixed: false},
         '1,4': {type: 'L_NE', fixed: false},
         '2,4': {type: 'H', fixed: false},
         '3,4': {type: 'H', fixed: false},
-        '4,4': {type: 'G3', fixed: false, isGlitch: true},
+        '4,4': {type: 'G3', fixed: false, isGlitch: true}, // Challenge 3
         '5,4': {type: 'L_WN', fixed: false},
         '5,3': {type: 'L_ES', fixed: false},
-        '6,3': {type: 'G4', fixed: false, isGlitch: true},
-        '7,3': {type: 'E', fixed: true}
+        '6,3': {type: 'G4', fixed: false, isGlitch: true}, // Challenge 4
+        // New Path Extension for G5
+        '7,3': {type: 'L_SW', fixed: false}, 
+        '7,4': {type: 'I', fixed: false},
+        '7,5': {type: 'L_WN', fixed: false},
+        '6,5': {type: 'G5', fixed: false, isGlitch: true}, // Challenge 5 (Pivot)
+        '5,5': {type: 'E', fixed: true} // New End
     };
 
+    // --- UPDATED CHALLENGES ---
     const CHALLENGES = {
         'G1': { 
             title: "DATA CREATION & ORG",
@@ -500,13 +507,13 @@
             fixType: 'H' 
         },
         'G2': { 
-            title: "FORMULAS & CALCS",
-            tag: "GENERATE FORMULAS",
-            desc: "NEED AVG PRICE OF 4-STAR TOOLS. MANUAL FORMULAS ARE ERROR-PRONE.",
+            title: "COMPLEX FORMULAS",
+            tag: "XLOOKUP GENERATION",
+            desc: "NEED 'UNIT PRICE' FROM 'MASTER_DATA' MATCHING 'SKU_ID'. VLOOKUP IS BREAKING ON COLUMNS.",
             options: [
-                "A) PROMPT: 'CALCULATE AVG PRICE OF 4-STAR TOOLS'.",
-                "B) GOOGLE 'AVERAGEIFS SYNTAX' AND DEBUG.",
-                "C) FILTER, COPY, USE =AVERAGE()."
+                "A) PROMPT: 'XLOOKUP PRICE FROM MASTER_DATA MATCHING SKU_ID. EXPLAIN HOW IT WORKS'.",
+                "B) MANUALLY CHECK ROWS AND COPY PASTE.",
+                "C) USE INDEX/MATCH WITHOUT HELP."
             ],
             correctIdx: 0, 
             fixType: 'H' 
@@ -533,6 +540,18 @@
                 "C) SEND RAW CSV."
             ],
             correctIdx: 0, 
+            fixType: 'H' 
+        },
+        'G5': { 
+            title: "SUSTAINABILITY TRACKING",
+            tag: "PIVOT TABLES",
+            desc: "YOU ARE THE PROCESS CAPTAIN. FIND THE SUPPLIER WITH THE MOST INVALID SKUS. ORDER DESCENDING TO FIND THE MAIN OFFENDER.",
+            options: [
+                "A) COUNT MANUALLY ON SCREEN.",
+                "B) PROMPT: 'CREATE A PIVOT TABLE: COUNT SKU BY SUPPLIER, SORT DESCENDING BY COUNT'.",
+                "C) FILTER TABLE AND GUESS."
+            ],
+            correctIdx: 1, 
             fixType: 'H' 
         }
     };
@@ -695,7 +714,7 @@
             updateVisuals(tile);
             fixedCount++;
             document.getElementById('fixed-count').innerText = fixedCount;
-            document.getElementById('integrity').innerText = (fixedCount * 25) + "%";
+            document.getElementById('integrity').innerText = (fixedCount * 20) + "%"; // Adjusted to 20% per glitch (5 total)
         } else {
             alert("INEFFICIENT METHOD. TRY AGAIN.");
         }
@@ -778,7 +797,8 @@
     function checkWinCondition(st) {
         clearInterval(flowTimer);
         flowTimer = null;
-        if(fixedCount === 4) {
+        // Check if all 5 glitches are fixed
+        if(fixedCount === 5) {
             st.innerText = "ONLINE";
             st.className = "metric-value success";
             document.getElementById('modal-win').style.display = 'flex';
