@@ -6,15 +6,19 @@
     <title>Zally Pipeline Challenge</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap'); /* Added Roboto for readable body text */
 
         :root {
             --bg-color: #202028;
             --panel-bg: #1a1a20;
             --grid-bg: #0d0d10;
+            --pipe-gray: #555;
+            --pipe-border: #222;
+            --water-blue: #00bcd4;
+            --rust-red: #c0392b;
             --zalando-orange: #ff6900;
             --success-green: #2ecc71;
             --danger-red: #e74c3c;
-            --water-blue: #00bcd4;
         }
 
         body {
@@ -65,7 +69,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            image-rendering: pixelated;
+            image-rendering: pixelated; 
         }
 
         .profile-name {
@@ -73,6 +77,12 @@
             font-size: 14px;
             margin-bottom: 8px;
             text-shadow: 2px 2px 0 #000;
+            text-transform: uppercase;
+        }
+
+        .profile-role {
+            color: #aaa;
+            font-size: 10px;
             text-transform: uppercase;
         }
 
@@ -88,6 +98,7 @@
         .metric-label { font-size: 10px; color: #888; margin-bottom: 8px; display: block; }
         .metric-value { font-size: 18px; color: #fff; }
 
+        #flow-status { color: #555; transition: color 0.3s; }
         #flow-status.pumping { color: var(--water-blue); animation: blink 0.5s infinite; }
         #flow-status.success { color: var(--success-green); }
         #flow-status.fail { color: var(--danger-red); }
@@ -119,22 +130,35 @@
             border: 1px solid #1a1a1a;
         }
 
-        /* --- NEW SPRITE SYSTEM --- */
-        /* Un solo DIV per il tubo, un solo DIV per l'acqua */
-        
-        .sprite {
+        /* --- GRAPHICS --- */
+        .pipe-part {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-size: cover;
-            background-repeat: no-repeat;
+            background: var(--pipe-gray);
+            border: 4px solid var(--pipe-border);
+            z-index: 1;
+            display: none;
         }
 
-        .pipe-sprite { z-index: 1; }
-        .water-sprite { z-index: 2; opacity: 0; transition: opacity 0.2s; }
-        .water-sprite.visible { opacity: 1; }
+        .p-center { top: 24px; left: 24px; width: 32px; height: 32px; z-index: 1; border:none; display: block; }
+        .p-n { top: 0; left: 24px; width: 32px; height: 32px; border-bottom: none; }
+        .p-e { top: 24px; right: 0; width: 32px; height: 32px; border-left: none; }
+        .p-s { bottom: 0; left: 24px; width: 32px; height: 32px; border-top: none; }
+        .p-w { top: 24px; left: 0; width: 32px; height: 32px; border-right: none; }
 
-        /* Glitch Marker */
+        .water-part {
+            position: absolute;
+            background: var(--water-blue);
+            z-index: 2;
+            display: none;
+        }
+
+        .w-center { top: 28px; left: 28px; width: 24px; height: 24px; }
+        .w-n { top: 0; left: 28px; width: 24px; height: 28px; }
+        .w-e { top: 28px; left: 28px; width: 52px; height: 24px; }
+        .w-s { top: 28px; left: 28px; width: 24px; height: 52px; }
+        .w-w { top: 28px; left: 0; width: 28px; height: 24px; }
+
+        .tile.glitch .pipe-part, .tile.glitch .p-center { background: var(--rust-red); border-color: #58130a; }
         .glitch-mark {
             position: absolute;
             top: 50%; left: 50%;
@@ -145,7 +169,6 @@
             text-shadow: 2px 2px 0 #000;
         }
 
-        /* Labels */
         .label {
             position: absolute;
             font-size: 8px;
@@ -159,7 +182,6 @@
         .start-label { background: var(--success-green); }
         .end-label { background: #f1c40f; }
 
-        /* Cursor */
         #cursor {
             position: absolute;
             width: 80px; height: 80px;
@@ -171,29 +193,77 @@
             transition: transform 0.1s;
         }
 
-        /* Modals */
+        /* --- IMPROVED MODALS --- */
         .retro-modal {
             position: fixed;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             background: #0000aa;
             border: 4px solid #fff;
-            padding: 30px;
-            width: 550px;
+            padding: 0; /* Remove padding to use flex layout */
+            width: 700px; /* Wider for content */
             display: none;
             z-index: 100;
             box-shadow: 20px 20px 0px rgba(0,0,0,0.8);
-            text-align: center;
+            text-align: left;
+            flex-direction: column;
         }
-        .retro-modal h2 { background: #fff; color: #0000aa; margin: -30px -30px 20px -30px; padding: 15px; font-size: 16px; text-transform: uppercase;}
-        .retro-modal p { line-height: 1.8; font-size: 12px; margin-bottom: 25px; }
+
+        .modal-header {
+            background: #fff;
+            color: #0000aa;
+            padding: 15px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+            font-family: 'Roboto', sans-serif; /* Readable font for content */
+            color: white;
+        }
+
+        .modal-body p {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
 
         .btn-arcade {
-            display: block; width: 100%; background: #000; color: white; border: 4px solid white; padding: 15px;
-            font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer; margin-bottom: 10px;
-            text-transform: uppercase;
+            display: block; width: 100%; 
+            background: #000; color: white; 
+            border: 3px solid white; 
+            padding: 15px;
+            font-family: 'Roboto', sans-serif; 
+            font-weight: bold;
+            font-size: 14px; 
+            text-align: left; 
+            cursor: pointer; 
+            margin-bottom: 10px;
+            transition: all 0.2s;
         }
-        .btn-arcade:hover { background: var(--water-blue); border-color: #fff; }
+        .btn-arcade:hover { 
+            background: var(--water-blue); 
+            color: #000;
+            border-color: #fff;
+            transform: translateX(5px);
+        }
+        
+        .scenario-tag {
+            display: inline-block;
+            background: var(--zalando-orange);
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-family: 'Roboto', sans-serif;
+        }
 
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes bounce { 0%, 100% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, -60%); } }
@@ -240,40 +310,63 @@
         </div>
     </div>
 
-    <!-- MODALS -->
-    <div id="modal-start" class="retro-modal" style="display:block">
-        <h2>Mission Briefing</h2>
-        <p>
-            The Pipeline is broken.<br><br>
-            1. Find rusty pipes (Glitches)<br>
-            2. ENTER to fix with Gemini<br>
-            3. SPACE to rotate pipes<br>
-            4. 'F' to start the flow
-        </p>
-        <button class="btn-arcade" onclick="startGame()">Start Shift</button>
+    <!-- START MODAL -->
+    <div id="modal-start" class="retro-modal" style="display:flex">
+        <div class="modal-header">
+            <span>MISSION BRIEFING</span>
+            <span>CW48</span>
+        </div>
+        <div class="modal-body">
+            <p>
+                <strong>Welcome, Zally.</strong><br><br>
+                The Operations Pipeline is clogged. Critical data from Suppliers and Returns is not reaching the Dashboard.<br><br>
+                <strong>YOUR MISSION:</strong><br>
+                1. Locate the 4 <span style="color:var(--rust-red)">Red Glitches</span> (Operational Blockers).<br>
+                2. Press <strong>ENTER</strong> to deploy Gemini and solve the issue.<br>
+                3. Press <strong>SPACE</strong> to align the pipes.<br>
+                4. Press <strong>F</strong> to activate the data flow.
+            </p>
+            <button class="btn-arcade" style="text-align:center; font-family:'Press Start 2P'; margin-top:20px;" onclick="startGame()">>>> START SHIFT <<<</button>
+        </div>
     </div>
 
+    <!-- QUIZ MODAL -->
     <div id="modal-quiz" class="retro-modal">
-        <h2 id="quiz-title">Challenge</h2>
-        <p id="quiz-desc">...</p>
-        <div id="quiz-options"></div>
+        <div class="modal-header">
+            <span id="quiz-title">CHALLENGE</span>
+            <span>⚠️ ERROR</span>
+        </div>
+        <div class="modal-body">
+            <div id="quiz-tag" class="scenario-tag">DATA CLEANING</div>
+            <p id="quiz-desc">Description...</p>
+            <div id="quiz-options"></div>
+        </div>
     </div>
 
+    <!-- WIN MODAL -->
     <div id="modal-win" class="retro-modal">
-        <h2 style="background:var(--success-green); color:white;">System Online</h2>
-        <p>
-            SUCCESS!<br><br>
-            Gemini integration complete.<br>
-            Data is flowing correctly.
-        </p>
-        <button class="btn-arcade" onclick="location.reload()">New Report</button>
+        <div class="modal-header" style="background:var(--success-green); color:white;">
+            <span>SYSTEM ONLINE</span>
+            <span>100%</span>
+        </div>
+        <div class="modal-body">
+            <p>
+                <strong>EXCELLENT WORK!</strong><br><br>
+                The pipeline is fully operational. The management report has been generated successfully.<br><br>
+                <strong>Impact:</strong><br>
+                - Supplier Data Cleaned<br>
+                - Penalty Formulas Automated<br>
+                - Returns Reconciled<br>
+                - Visualization Created instantly
+            </p>
+            <button class="btn-arcade" style="text-align:center; font-family:'Press Start 2P'; margin-top:20px;" onclick="location.reload()">NEXT REPORT</button>
+        </div>
     </div>
 
 <script>
     const COLS = 8;
     const ROWS = 7;
     
-    // [North, East, South, West]
     const PIPES = {
         EMPTY: [0,0,0,0],
         I: [1,0,1,0], H: [0,1,0,1],
@@ -302,11 +395,56 @@
         '7,3': {type: 'E', fixed: true}
     };
 
+    // --- REFINED CHALLENGES (More Context, Better Prompts) ---
     const CHALLENGES = {
-        'G1': { title: "DATA CLEANING", desc: "Dates mismatch (US vs EU).", options: ["Edit manually", "Prompt: 'Standardize dates'", "Delete"], correctIdx: 1, fixType: 'H' },
-        'G2': { title: "FORMULA GAP", desc: "Need VAT for DE.", options: ["Search Google", "Prompt: 'Calc 19% if DE'", "Calc manually"], correctIdx: 1, fixType: 'H' },
-        'G3': { title: "DATA MERGE", desc: "Need Status from Sheet 2.", options: ["Copy-Paste", "VLOOKUP", "Prompt: 'Look up Status'"], correctIdx: 2, fixType: 'H' },
-        'G4': { title: "CHART NEEDED", desc: "Need Sales Chart.", options: ["Prompt: 'Create bar chart'", "Draw it", "Excel"], correctIdx: 0, fixType: 'H' }
+        'G1': { 
+            title: "MESSY STOCK FILE",
+            tag: "DATA CLEANING",
+            desc: "A Priority Supplier sent the FW24 Stock File. The 'Delivery_Date' column is a disaster: mixed formats (US vs EU), typos, and text like 'TBC'. The ERP import keeps failing.",
+            options: [
+                "1. Filter the column and manually re-type the 500 incorrect dates one by one.",
+                "2. Prompt: 'Identify date formats in Column C, standardize everything to DD/MM/YYYY, and replace non-dates with today's date.'",
+                "3. Delete the rows with errors and ignore the missing stock for now."
+            ],
+            correctIdx: 1, 
+            fixType: 'H' 
+        },
+        'G2': { 
+            title: "LOGIC TRAP",
+            tag: "FORMULA GENERATION",
+            desc: "We need to calculate the 'Partner Penalty Fee'. The rule is tricky: If Delay > 5 days AND Reason is 'Supplier Fault', the Fee is 5% of Order Value. Otherwise, it's 0%.",
+            options: [
+                "1. Spend 20 mins Googling 'Excel nested IF AND syntax' and try to debug it.",
+                "2. Prompt: 'Write a formula for Col E: If Delay (Col C) > 5 and Reason (Col D) is Supplier Fault, calculate 5% of Value (Col B). Else 0.'",
+                "3. Calculate a few manually with a calculator and drag the values down."
+            ],
+            correctIdx: 1, 
+            fixType: 'H' 
+        },
+        'G3': { 
+            title: "THE MISSING LINK",
+            tag: "DATA RECONCILIATION",
+            desc: "You have the 'Order List' in this tab and the 'Return Reasons' in a separate 'Logistics_Report' file. You need to map the reasons to the orders to spot quality issues.",
+            options: [
+                "1. Copy-paste the Order IDs one by one into the search bar of the other file.",
+                "2. Guess the return reasons based on the product category to save time.",
+                "3. Prompt: 'Write a VLOOKUP formula to pull 'Return Reason' from the Logistics_Report sheet matching the 'Order ID' in Column A.'"
+            ],
+            correctIdx: 2, 
+            fixType: 'H' 
+        },
+        'G4': { 
+            title: "URGENT REQUEST",
+            tag: "VISUALIZATION",
+            desc: "Your Lead needs a slide for the Weekly JF in 5 minutes. They want to see the share of 'Late Deliveries' split by 'Carrier'. You only have a raw CSV export.",
+            options: [
+                "1. Prompt: 'Create a pie chart showing the percentage of Late Deliveries by Carrier based on this data table.'",
+                "2. Count the rows manually, write the numbers on a post-it, and draw a sketch.",
+                "3. Send the raw CSV file to your Lead and hope they can read it."
+            ],
+            correctIdx: 0, 
+            fixType: 'H' 
+        }
     };
 
     let grid = [];
@@ -315,38 +453,6 @@
     let isPaused = true;
     let flowTimer = null;
     let waterQueue = [];
-
-    // --- SVG GENERATOR (The "Internal Sprite Sheet") ---
-    // Generates SVG data URI based on connections [N,E,S,W]
-    function getPipeSVG(conns, isWater) {
-        const [n, e, s, w] = conns;
-        if (!n && !e && !s && !w) return 'none'; // Empty
-
-        const color = isWater ? '#00bcd4' : '#7f8c8d';
-        const stroke = isWater ? '' : 'stroke="#2c3e50" stroke-width="4"';
-        const size = isWater ? 20 : 32; // Water is thinner (inside pipe)
-        const center = 40;
-        const offset = (80 - size) / 2;
-
-        let paths = [];
-        
-        // Center Hub
-        paths.push(`<rect x="${offset}" y="${offset}" width="${size}" height="${size}" fill="${color}" ${stroke} />`);
-
-        // Arms
-        if(n) paths.push(`<rect x="${offset}" y="0" width="${size}" height="${offset+2}" fill="${color}" ${stroke} />`); // +2 overlap
-        if(e) paths.push(`<rect x="${offset+size-2}" y="${offset}" width="${offset+2}" height="${size}" fill="${color}" ${stroke} />`);
-        if(s) paths.push(`<rect x="${offset}" y="${offset+size-2}" width="${size}" height="${offset+2}" fill="${color}" ${stroke} />`);
-        if(w) paths.push(`<rect x="0" y="${offset}" width="${offset+2}" height="${size}" fill="${color}" ${stroke} />`);
-
-        // If it's a pipe (not water), we need to redraw center on top to hide stroke overlaps
-        if(!isWater) {
-             paths.push(`<rect x="${offset}" y="${offset}" width="${size}" height="${size}" fill="${color}" />`);
-        }
-
-        const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">${paths.join('')}</svg>`;
-        return `url('data:image/svg+xml;utf8,${encodeURIComponent(svgString)}')`;
-    }
 
     function startGame() {
         document.getElementById('modal-start').style.display = 'none';
@@ -398,10 +504,18 @@
         el.className = 'tile';
         if(tile.isGlitch) el.classList.add('glitch');
 
-        // SINGLE DIV STRATEGY
         let html = `
-            <div class="sprite pipe-sprite"></div>
-            <div class="sprite water-sprite"></div>
+            <div class="pipe-part p-center"></div>
+            <div class="pipe-part p-n" id="p-n-${tile.x}-${tile.y}"></div>
+            <div class="pipe-part p-e" id="p-e-${tile.x}-${tile.y}"></div>
+            <div class="pipe-part p-s" id="p-s-${tile.x}-${tile.y}"></div>
+            <div class="pipe-part p-w" id="p-w-${tile.x}-${tile.y}"></div>
+            
+            <div class="water-part w-center" id="w-c-${tile.x}-${tile.y}"></div>
+            <div class="water-part w-n" id="w-n-${tile.x}-${tile.y}"></div>
+            <div class="water-part w-e" id="w-e-${tile.x}-${tile.y}"></div>
+            <div class="water-part w-s" id="w-s-${tile.x}-${tile.y}"></div>
+            <div class="water-part w-w" id="w-w-${tile.x}-${tile.y}"></div>
         `;
 
         if(tile.isGlitch) html += `<div class="glitch-mark">⚠️</div>`;
@@ -415,22 +529,25 @@
     }
 
     function updateVisuals(tile) {
-        // Update Pipe Sprite
-        const pipeDiv = tile.el.querySelector('.pipe-sprite');
-        pipeDiv.style.backgroundImage = getPipeSVG(tile.conns, false);
+        const c = tile.conns;
+        const e = tile.el;
+        e.querySelector(`#p-n-${tile.x}-${tile.y}`).style.display = c[0] ? 'block' : 'none';
+        e.querySelector(`#p-e-${tile.x}-${tile.y}`).style.display = c[1] ? 'block' : 'none';
+        e.querySelector(`#p-s-${tile.x}-${tile.y}`).style.display = c[2] ? 'block' : 'none';
+        e.querySelector(`#p-w-${tile.x}-${tile.y}`).style.display = c[3] ? 'block' : 'none';
+        
+        e.querySelector(`#w-n-${tile.x}-${tile.y}`).style.display = 'none';
+        e.querySelector(`#w-e-${tile.x}-${tile.y}`).style.display = 'none';
+        e.querySelector(`#w-s-${tile.x}-${tile.y}`).style.display = 'none';
+        e.querySelector(`#w-w-${tile.x}-${tile.y}`).style.display = 'none';
+        e.querySelector(`#w-c-${tile.x}-${tile.y}`).style.display = 'none';
 
-        // Update Water Sprite (Base shape is same as pipe, but hidden)
-        const waterDiv = tile.el.querySelector('.water-sprite');
-        waterDiv.style.backgroundImage = getPipeSVG(tile.conns, true);
-        waterDiv.classList.remove('visible');
-
-        if(!tile.isGlitch && tile.el.classList.contains('glitch')) {
-            tile.el.classList.remove('glitch');
-            tile.el.querySelector('.glitch-mark').remove();
+        if(!tile.isGlitch && e.classList.contains('glitch')) {
+            e.classList.remove('glitch');
+            e.querySelector('.glitch-mark').remove();
         }
     }
 
-    // --- INPUT ---
     document.addEventListener('keydown', (e) => {
         if(isPaused || flowTimer) return; 
         
@@ -459,22 +576,23 @@
         document.getElementById('cursor').style.transform = `translate(${zally.x * 80}px, ${zally.y * 80}px)`;
     }
 
-    // --- QUIZ ---
     function openQuiz(tile) {
         isPaused = true;
         const data = CHALLENGES[tile.glitchId];
         document.getElementById('quiz-title').innerText = data.title;
         document.getElementById('quiz-desc').innerText = data.desc;
+        document.getElementById('quiz-tag').innerText = data.tag;
+        
         const opts = document.getElementById('quiz-options');
         opts.innerHTML = '';
         data.options.forEach((txt, idx) => {
             let btn = document.createElement('button');
             btn.className = 'btn-arcade';
-            btn.innerText = "> " + txt;
+            btn.innerText = txt;
             btn.onclick = () => solveQuiz(idx === data.correctIdx, tile, data);
             opts.appendChild(btn);
         });
-        document.getElementById('modal-quiz').style.display = 'block';
+        document.getElementById('modal-quiz').style.display = 'flex';
     }
 
     function solveQuiz(isCorrect, tile, data) {
@@ -489,17 +607,16 @@
             document.getElementById('fixed-count').innerText = fixedCount;
             document.getElementById('integrity').innerText = (fixedCount * 25) + "%";
         } else {
-            alert("Try again!");
+            alert("That's not the most efficient way. Try again!");
         }
     }
 
     function resetWater() {
-        document.querySelectorAll('.water-sprite').forEach(el => el.classList.remove('visible'));
+        document.querySelectorAll('.water-part').forEach(el => el.style.display = 'none');
         document.getElementById('flow-status').innerText = "OFFLINE";
         document.getElementById('flow-status').className = "metric-value";
     }
 
-    // --- NEW FLOW LOGIC (BFS QUEUE) ---
     function startFlow() {
         if(flowTimer) return;
         resetWater();
@@ -509,8 +626,11 @@
         st.className = "metric-value pumping";
 
         let startTile = grid[0][0];
-        startTile.el.querySelector('.water-sprite').classList.add('visible');
         waterQueue = [startTile];
+        
+        // Show Start Water
+        startTile.el.querySelector('.w-center').style.display = 'block';
+        startTile.el.querySelector('.w-e').style.display = 'block'; // Start flows East
 
         flowTimer = setInterval(() => {
             let nextQueue = [];
@@ -518,25 +638,30 @@
 
             for (let t of waterQueue) {
                 const dirs = [
-                    {dx:0, dy:-1, out:0, in:2}, // N
-                    {dx:1, dy:0,  out:1, in:3}, // E
-                    {dx:0, dy:1,  out:2, in:0}, // S
-                    {dx:-1, dy:0, out:3, in:1}  // W
+                    {dx:0, dy:-1, out:0, in:2, wOut:'w-n', wIn:'w-s'}, // N
+                    {dx:1, dy:0,  out:1, in:3, wOut:'w-e', wIn:'w-w'}, // E
+                    {dx:0, dy:1,  out:2, in:0, wOut:'w-s', wIn:'w-n'}, // S
+                    {dx:-1, dy:0, out:3, in:1, wOut:'w-w', wIn:'w-e'}  // W
                 ];
 
                 for(let d of dirs) {
-                    // 1. Current has output?
                     if(t.conns[d.out]) { 
                         let nx = t.x + d.dx;
                         let ny = t.y + d.dy;
                         
                         if(nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
                             let nextT = grid[ny][nx];
-                            let waterDiv = nextT.el.querySelector('.water-sprite');
+                            let nextCenter = nextT.el.querySelector('.w-center');
                             
-                            // 2. Next has input AND not glitch AND not already wet
-                            if(nextT.conns[d.in] && !nextT.isGlitch && !waterDiv.classList.contains('visible')) {
-                                waterDiv.classList.add('visible');
+                            // Check connection
+                            if(nextT.conns[d.in] && !nextT.isGlitch && nextCenter.style.display !== 'block') {
+                                // Light up Current OUT water
+                                t.el.querySelector('.'+d.wOut).style.display = 'block';
+                                
+                                // Light up Next IN water + Center
+                                nextT.el.querySelector('.'+d.wIn).style.display = 'block';
+                                nextCenter.style.display = 'block';
+                                
                                 nextQueue.push(nextT);
                                 movedSomewhere = true;
 
@@ -551,11 +676,10 @@
             }
             waterQueue = nextQueue;
 
-            // If no moves, blocked
             if(waterQueue.length === 0 || !movedSomewhere) {
                 clearInterval(flowTimer);
                 flowTimer = null;
-                if (document.getElementById('modal-win').style.display !== 'block') {
+                if (document.getElementById('modal-win').style.display !== 'flex') {
                     st.innerText = "BLOCKED";
                     st.className = "metric-value fail";
                     setTimeout(resetWater, 1500);
@@ -571,10 +695,10 @@
         if(fixedCount === 4) {
             st.innerText = "ONLINE";
             st.className = "metric-value success";
-            document.getElementById('modal-win').style.display = 'block';
+            document.getElementById('modal-win').style.display = 'flex';
         } else {
             st.innerText = "UNSTABLE";
-            alert("Flow incomplete! Fix glitches first.");
+            setTimeout(() => alert("Pipeline complete, but glitches remain! Fix them all."), 100);
             setTimeout(resetWater, 2000);
         }
     }
