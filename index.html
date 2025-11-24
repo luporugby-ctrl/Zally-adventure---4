@@ -6,6 +6,7 @@
     <title>Zally Pipeline Challenge</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
         :root {
             --bg-color: #202028;
@@ -18,12 +19,13 @@
             --zalando-orange: #ff6900;
             --success-green: #2ecc71;
             --danger-red: #e74c3c;
+            --bonus-purple: #9b59b6;
         }
 
         body {
             background-color: var(--bg-color);
             color: white;
-            font-family: 'Press Start 2P', cursive; /* UNICO FONT */
+            font-family: 'Press Start 2P', cursive;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -31,7 +33,7 @@
             margin: 0;
             overflow: hidden;
             user-select: none;
-            font-size: 10px; /* Base size for pixel look */
+            font-size: 10px;
         }
 
         .main-container {
@@ -202,7 +204,7 @@
             background: #0000aa;
             border: 4px solid #fff;
             padding: 0; 
-            width: 800px; /* Wider */
+            width: 800px; 
             display: none;
             z-index: 100;
             box-shadow: 20px 20px 0px rgba(0,0,0,0.8);
@@ -224,13 +226,44 @@
         .modal-body {
             padding: 30px;
             color: white;
-            font-family: 'Press Start 2P', cursive; /* Pixel Font Everywhere */
+            font-family: 'Press Start 2P', cursive;
+            max-height: 70vh;
+            overflow-y: auto;
         }
 
         .modal-body p {
             font-size: 10px;
             line-height: 2;
             margin-bottom: 30px;
+        }
+
+        /* Styles specific for Bonus Modal Content */
+        .bonus-content {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+        }
+        .bonus-content h3 {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--water-blue);
+            font-size: 12px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .bonus-content ul {
+            list-style-type: square;
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+        .bonus-content li {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .bonus-content code {
+            background: #333;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: var(--zalando-orange);
         }
 
         .btn-arcade {
@@ -357,7 +390,41 @@
                 > REPORTS FORMATTED INSTANTLY<br>
                 > INSIGHTS UNLOCKED
             </p>
-            <button class="btn-arcade" style="text-align:center" onclick="location.reload()">NEXT REPORT</button>
+            <button class="btn-arcade" style="text-align:center" onclick="showBonus()">UNLOCK BONUS ITEM</button>
+        </div>
+    </div>
+
+    <!-- BONUS MODAL (AI FUNCTION) -->
+    <div id="modal-bonus" class="retro-modal">
+        <div class="modal-header" style="background:var(--bonus-purple); color:white;">
+            <span>SECRET WEAPON UNLOCKED</span>
+            <span>=AI()</span>
+        </div>
+        <div class="modal-body">
+            <div class="bonus-content">
+                <p style="font-size:14px; color:var(--zalando-orange); font-weight:bold;">
+                    NEW SKILL ACQUIRED: AI CELL MODE
+                </p>
+                <p style="font-family:'Roboto'; font-size:14px; text-transform:none; line-height:1.5;">
+                    The feature you asked about is officially known as the <strong>AI Function</strong>. It allows you to use Gemini directly inside a cell.
+                </p>
+                
+                <h3>KEY CAPABILITIES</h3>
+                <ul style="font-family:'Roboto'">
+                    <li><strong>Generate Text:</strong> Create slogans or emails.<br><code>=AI("Write a slogan for...", A2)</code></li>
+                    <li><strong>Summarize:</strong> Condense long feedback.<br><code>=AI("Summarize this review", D2)</code></li>
+                    <li><strong>Categorize:</strong> Organize data by sentiment.<br><code>=AI("Classify as Positive/Negative", C5)</code></li>
+                    <li><strong>Analyze:</strong> Get insights instantly.</li>
+                </ul>
+
+                <h3>HOW TO USE IT</h3>
+                <p style="font-family:'Roboto'; font-size:14px; text-transform:none;">
+                    1. Type <code>=AI("Prompt", [Cell])</code> in an empty cell.<br>
+                    2. Drag the formula down to apply to the whole column.<br>
+                    3. Watch Gemini do the heavy lifting.
+                </p>
+            </div>
+            <button class="btn-arcade" style="text-align:center; margin-top:20px;" onclick="location.reload()">FINISH TRAINING</button>
         </div>
     </div>
 
@@ -393,7 +460,6 @@
         '7,3': {type: 'E', fixed: true}
     };
 
-    // --- UPDATED CHALLENGES BASED ON 4 CORE AREAS ---
     const CHALLENGES = {
         'G1': { 
             title: "DATA CREATION & ORG",
@@ -696,6 +762,12 @@
             setTimeout(() => alert("Pipeline complete, but glitches remain! Fix them all."), 100);
             setTimeout(resetWater, 2000);
         }
+    }
+
+    // Added showBonus function
+    function showBonus() {
+        document.getElementById('modal-win').style.display = 'none';
+        document.getElementById('modal-bonus').style.display = 'flex';
     }
 
 </script>
