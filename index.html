@@ -6,7 +6,6 @@
     <title>Zally Pipeline Challenge</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap'); /* Added Roboto for readable body text */
 
         :root {
             --bg-color: #202028;
@@ -24,7 +23,7 @@
         body {
             background-color: var(--bg-color);
             color: white;
-            font-family: 'Press Start 2P', cursive;
+            font-family: 'Press Start 2P', cursive; /* UNICO FONT */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -32,6 +31,7 @@
             margin: 0;
             overflow: hidden;
             user-select: none;
+            font-size: 10px; /* Base size for pixel look */
         }
 
         .main-container {
@@ -44,7 +44,7 @@
         .sidebar {
             display: flex;
             flex-direction: column;
-            width: 280px;
+            width: 300px;
             gap: 20px;
         }
 
@@ -75,14 +75,15 @@
         .profile-name {
             color: var(--zalando-orange);
             font-size: 14px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             text-shadow: 2px 2px 0 #000;
             text-transform: uppercase;
+            line-height: 1.5;
         }
 
         .profile-role {
             color: #aaa;
-            font-size: 10px;
+            font-size: 8px;
             text-transform: uppercase;
         }
 
@@ -95,8 +96,8 @@
 
         .metric-row { margin-bottom: 20px; }
         .metric-row:last-child { margin-bottom: 0; }
-        .metric-label { font-size: 10px; color: #888; margin-bottom: 8px; display: block; }
-        .metric-value { font-size: 18px; color: #fff; }
+        .metric-label { font-size: 8px; color: #888; margin-bottom: 10px; display: block; }
+        .metric-value { font-size: 12px; color: #fff; }
 
         #flow-status { color: #555; transition: color 0.3s; }
         #flow-status.pumping { color: var(--water-blue); animation: blink 0.5s infinite; }
@@ -104,7 +105,7 @@
         #flow-status.fail { color: var(--danger-red); }
 
         .controls-hint { 
-            font-size: 10px; color: #777; margin-top: 20px; 
+            font-size: 8px; color: #777; margin-top: 20px; 
             text-align: center; line-height: 2;
             border-top: 2px solid #333;
             padding-top: 10px;
@@ -193,15 +194,15 @@
             transition: transform 0.1s;
         }
 
-        /* --- IMPROVED MODALS --- */
+        /* --- MODALS --- */
         .retro-modal {
             position: fixed;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             background: #0000aa;
             border: 4px solid #fff;
-            padding: 0; /* Remove padding to use flex layout */
-            width: 700px; /* Wider for content */
+            padding: 0; 
+            width: 800px; /* Wider */
             display: none;
             z-index: 100;
             box-shadow: 20px 20px 0px rgba(0,0,0,0.8);
@@ -213,8 +214,7 @@
             background: #fff;
             color: #0000aa;
             padding: 15px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 16px;
+            font-size: 14px;
             text-transform: uppercase;
             display: flex;
             justify-content: space-between;
@@ -222,30 +222,30 @@
         }
 
         .modal-body {
-            padding: 20px;
-            font-family: 'Roboto', sans-serif; /* Readable font for content */
+            padding: 30px;
             color: white;
+            font-family: 'Press Start 2P', cursive; /* Pixel Font Everywhere */
         }
 
         .modal-body p {
-            font-size: 16px;
-            line-height: 1.5;
-            margin-bottom: 20px;
+            font-size: 10px;
+            line-height: 2;
+            margin-bottom: 30px;
         }
 
         .btn-arcade {
             display: block; width: 100%; 
             background: #000; color: white; 
-            border: 3px solid white; 
-            padding: 15px;
-            font-family: 'Roboto', sans-serif; 
-            font-weight: bold;
-            font-size: 14px; 
+            border: 4px solid white; 
+            padding: 20px;
+            font-family: 'Press Start 2P', cursive; 
+            font-size: 10px; 
             text-align: left; 
             cursor: pointer; 
-            margin-bottom: 10px;
-            transition: all 0.2s;
+            margin-bottom: 15px;
+            transition: all 0.1s;
         }
+        
         .btn-arcade:hover { 
             background: var(--water-blue); 
             color: #000;
@@ -258,11 +258,9 @@
             background: var(--zalando-orange);
             color: white;
             padding: 5px 10px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            font-family: 'Roboto', sans-serif;
+            font-size: 8px;
+            margin-bottom: 15px;
+            border: 2px solid white;
         }
 
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -318,15 +316,15 @@
         </div>
         <div class="modal-body">
             <p>
-                <strong>Welcome, Zally.</strong><br><br>
-                The Operations Pipeline is clogged. Critical data from Suppliers and Returns is not reaching the Dashboard.<br><br>
-                <strong>YOUR MISSION:</strong><br>
-                1. Locate the 4 <span style="color:var(--rust-red)">Red Glitches</span> (Operational Blockers).<br>
-                2. Press <strong>ENTER</strong> to deploy Gemini and solve the issue.<br>
-                3. Press <strong>SPACE</strong> to align the pipes.<br>
-                4. Press <strong>F</strong> to activate the data flow.
+                WELCOME, ZALLY.<br><br>
+                THE OPERATIONS PIPELINE IS BROKEN.<br>CRITICAL DATA IS NOT REACHING THE DASHBOARD.<br><br>
+                YOUR MISSION:<br>
+                1. LOCATE THE 4 RED GLITCHES.<br>
+                2. PRESS [ENTER] TO DEPLOY GEMINI.<br>
+                3. PRESS [SPACE] TO ALIGN PIPES.<br>
+                4. PRESS [F] TO ACTIVATE FLOW.
             </p>
-            <button class="btn-arcade" style="text-align:center; font-family:'Press Start 2P'; margin-top:20px;" onclick="startGame()">>>> START SHIFT <<<</button>
+            <button class="btn-arcade" style="text-align:center" onclick="startGame()">>>> START SHIFT <<<</button>
         </div>
     </div>
 
@@ -334,11 +332,11 @@
     <div id="modal-quiz" class="retro-modal">
         <div class="modal-header">
             <span id="quiz-title">CHALLENGE</span>
-            <span>⚠️ ERROR</span>
+            <span>ERROR</span>
         </div>
         <div class="modal-body">
             <div id="quiz-tag" class="scenario-tag">DATA CLEANING</div>
-            <p id="quiz-desc">Description...</p>
+            <p id="quiz-desc">Loading...</p>
             <div id="quiz-options"></div>
         </div>
     </div>
@@ -351,15 +349,15 @@
         </div>
         <div class="modal-body">
             <p>
-                <strong>EXCELLENT WORK!</strong><br><br>
-                The pipeline is fully operational. The management report has been generated successfully.<br><br>
-                <strong>Impact:</strong><br>
-                - Supplier Data Cleaned<br>
-                - Penalty Formulas Automated<br>
-                - Returns Reconciled<br>
-                - Visualization Created instantly
+                EXCELLENT WORK!<br><br>
+                THE PIPELINE IS FULLY OPERATIONAL.<br><br>
+                IMPACT ACHIEVED:<br>
+                > SUPPLIER DATA ORGANIZED<br>
+                > COMPLEX CALCULATIONS AUTOMATED<br>
+                > REPORTS FORMATTED INSTANTLY<br>
+                > INSIGHTS UNLOCKED
             </p>
-            <button class="btn-arcade" style="text-align:center; font-family:'Press Start 2P'; margin-top:20px;" onclick="location.reload()">NEXT REPORT</button>
+            <button class="btn-arcade" style="text-align:center" onclick="location.reload()">NEXT REPORT</button>
         </div>
     </div>
 
@@ -395,52 +393,52 @@
         '7,3': {type: 'E', fixed: true}
     };
 
-    // --- REFINED CHALLENGES (More Context, Better Prompts) ---
+    // --- UPDATED CHALLENGES BASED ON 4 CORE AREAS ---
     const CHALLENGES = {
         'G1': { 
-            title: "MESSY STOCK FILE",
-            tag: "DATA CLEANING",
-            desc: "A Priority Supplier sent the FW24 Stock File. The 'Delivery_Date' column is a disaster: mixed formats (US vs EU), typos, and text like 'TBC'. The ERP import keeps failing.",
+            title: "DATA CREATION & ORG",
+            tag: "SMART FILL / TABLES",
+            desc: "We need a 'Project Tracker' for the new season launch ASAP. Also, the 'Category' column is inconsistent (some say 'Shoes', others 'Footwear').",
             options: [
-                "1. Filter the column and manually re-type the 500 incorrect dates one by one.",
-                "2. Prompt: 'Identify date formats in Column C, standardize everything to DD/MM/YYYY, and replace non-dates with today's date.'",
-                "3. Delete the rows with errors and ignore the missing stock for now."
+                "A) Manually type a table and fix categories one by one.",
+                "B) Prompt: 'Create a project tracker for fashion launch'. Then use Smart Fill to standardize 'Footwear' to 'Shoes'.",
+                "C) Create a blank sheet and email the team to fill it in."
             ],
             correctIdx: 1, 
             fixType: 'H' 
         },
         'G2': { 
-            title: "LOGIC TRAP",
-            tag: "FORMULA GENERATION",
-            desc: "We need to calculate the 'Partner Penalty Fee'. The rule is tricky: If Delay > 5 days AND Reason is 'Supplier Fault', the Fee is 5% of Order Value. Otherwise, it's 0%.",
+            title: "FORMULAS & CALCS",
+            tag: "GENERATE FORMULAS",
+            desc: "We need the average price of 'Tools' rated 4-stars or higher. Writing the query manually is prone to syntax errors.",
             options: [
-                "1. Spend 20 mins Googling 'Excel nested IF AND syntax' and try to debug it.",
-                "2. Prompt: 'Write a formula for Col E: If Delay (Col C) > 5 and Reason (Col D) is Supplier Fault, calculate 5% of Value (Col B). Else 0.'",
-                "3. Calculate a few manually with a calculator and drag the values down."
+                "A) Prompt: 'Create a formula that calculates the average price of Tools with a 4-star rating or higher'.",
+                "B) Search Google for 'Averageifs excel syntax' and try to debug.",
+                "C) Filter the table, copy to a new sheet, and use =AVERAGE()."
             ],
-            correctIdx: 1, 
+            correctIdx: 0, 
             fixType: 'H' 
         },
         'G3': { 
-            title: "THE MISSING LINK",
-            tag: "DATA RECONCILIATION",
-            desc: "You have the 'Order List' in this tab and the 'Return Reasons' in a separate 'Logistics_Report' file. You need to map the reasons to the orders to spot quality issues.",
+            title: "EDITING & FORMATTING",
+            tag: "COMPLEX EDITS",
+            desc: "The 'Status' column is messy text. We need standard Dropdowns (Open, In Progress, Done) and Conditional Formatting (Done = Green) for clarity.",
             options: [
-                "1. Copy-paste the Order IDs one by one into the search bar of the other file.",
-                "2. Guess the return reasons based on the product category to save time.",
-                "3. Prompt: 'Write a VLOOKUP formula to pull 'Return Reason' from the Logistics_Report sheet matching the 'Order ID' in Column A.'"
+                "A) Go to Data Validation, set up list manually. Then go to Conditional Formatting rules manually.",
+                "B) Leave it as text and color cells manually.",
+                "C) Prompt: 'Add dropdowns for Status (Open, In Progress, Done) and apply conditional formatting where Done is green'."
             ],
             correctIdx: 2, 
             fixType: 'H' 
         },
         'G4': { 
-            title: "URGENT REQUEST",
-            tag: "VISUALIZATION",
-            desc: "Your Lead needs a slide for the Weekly JF in 5 minutes. They want to see the share of 'Late Deliveries' split by 'Carrier'. You only have a raw CSV export.",
+            title: "ANALYSIS & VISUALIZATION",
+            tag: "UNLOCK INSIGHTS",
+            desc: "Management asks: 'What are the key takeaways for sales growth?'. They also want a Bar Chart of Sales by Region immediately.",
             options: [
-                "1. Prompt: 'Create a pie chart showing the percentage of Late Deliveries by Carrier based on this data table.'",
-                "2. Count the rows manually, write the numbers on a post-it, and draw a sketch.",
-                "3. Send the raw CSV file to your Lead and hope they can read it."
+                "A) Prompt: 'What are the key takeaways for sales growth?' followed by 'Create a bar chart of Sales by Region'.",
+                "B) Read all 1000 rows to find trends. Draw a chart in Paint.",
+                "C) Send the raw data file to Management."
             ],
             correctIdx: 0, 
             fixType: 'H' 
@@ -607,7 +605,7 @@
             document.getElementById('fixed-count').innerText = fixedCount;
             document.getElementById('integrity').innerText = (fixedCount * 25) + "%";
         } else {
-            alert("That's not the most efficient way. Try again!");
+            alert("Inefficient method. Try again!");
         }
     }
 
@@ -630,7 +628,7 @@
         
         // Show Start Water
         startTile.el.querySelector('.w-center').style.display = 'block';
-        startTile.el.querySelector('.w-e').style.display = 'block'; // Start flows East
+        startTile.el.querySelector('.w-e').style.display = 'block'; 
 
         flowTimer = setInterval(() => {
             let nextQueue = [];
@@ -638,10 +636,10 @@
 
             for (let t of waterQueue) {
                 const dirs = [
-                    {dx:0, dy:-1, out:0, in:2, wOut:'w-n', wIn:'w-s'}, // N
-                    {dx:1, dy:0,  out:1, in:3, wOut:'w-e', wIn:'w-w'}, // E
-                    {dx:0, dy:1,  out:2, in:0, wOut:'w-s', wIn:'w-n'}, // S
-                    {dx:-1, dy:0, out:3, in:1, wOut:'w-w', wIn:'w-e'}  // W
+                    {dx:0, dy:-1, out:0, in:2, wOut:'w-n', wIn:'w-s'}, 
+                    {dx:1, dy:0,  out:1, in:3, wOut:'w-e', wIn:'w-w'}, 
+                    {dx:0, dy:1,  out:2, in:0, wOut:'w-s', wIn:'w-n'}, 
+                    {dx:-1, dy:0, out:3, in:1, wOut:'w-w', wIn:'w-e'} 
                 ];
 
                 for(let d of dirs) {
@@ -653,12 +651,9 @@
                             let nextT = grid[ny][nx];
                             let nextCenter = nextT.el.querySelector('.w-center');
                             
-                            // Check connection
                             if(nextT.conns[d.in] && !nextT.isGlitch && nextCenter.style.display !== 'block') {
-                                // Light up Current OUT water
                                 t.el.querySelector('.'+d.wOut).style.display = 'block';
                                 
-                                // Light up Next IN water + Center
                                 nextT.el.querySelector('.'+d.wIn).style.display = 'block';
                                 nextCenter.style.display = 'block';
                                 
