@@ -6,7 +6,6 @@
     <title>Zally Pipeline Challenge</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
         :root {
             --bg-color: #202028;
@@ -204,7 +203,7 @@
             background: #0000aa;
             border: 4px solid #fff;
             padding: 0; 
-            width: 800px; 
+            width: 850px; 
             display: none;
             z-index: 100;
             box-shadow: 20px 20px 0px rgba(0,0,0,0.8);
@@ -234,35 +233,54 @@
         .modal-body p {
             font-size: 10px;
             line-height: 2;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
-        /* Styles specific for Bonus Modal Content */
+        /* Styles specific for Bonus Modal Content - ARCADE STYLE */
         .bonus-content {
-            font-family: 'Roboto', sans-serif;
-            line-height: 1.6;
+            font-family: 'Press Start 2P', cursive;
+            line-height: 1.8;
+            font-size: 9px;
         }
         .bonus-content h3 {
-            font-family: 'Press Start 2P', cursive;
             color: var(--water-blue);
-            font-size: 12px;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            font-size: 11px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--water-blue);
+            padding-bottom: 5px;
+            display: inline-block;
         }
         .bonus-content ul {
-            list-style-type: square;
-            padding-left: 20px;
+            list-style-type: none;
+            padding-left: 0;
             margin-bottom: 20px;
         }
         .bonus-content li {
-            margin-bottom: 8px;
-            font-size: 14px;
+            margin-bottom: 20px;
+            font-size: 9px;
+            position: relative;
+            padding-left: 20px;
+        }
+        .bonus-content li:before {
+            content: ">";
+            position: absolute;
+            left: 0;
+            color: var(--zalando-orange);
         }
         .bonus-content code {
-            background: #333;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-family: monospace;
+            display: block;
+            background: #222;
+            padding: 8px;
+            border: 1px solid #444;
+            font-family: 'Courier New', monospace; /* Terminal feel */
+            color: var(--success-green);
+            margin-top: 8px;
+            font-size: 10px;
+            box-shadow: 2px 2px 0 #000;
+        }
+        .bonus-content strong {
             color: var(--zalando-orange);
         }
 
@@ -397,31 +415,39 @@
     <!-- BONUS MODAL (AI FUNCTION) -->
     <div id="modal-bonus" class="retro-modal">
         <div class="modal-header" style="background:var(--bonus-purple); color:white;">
-            <span>SECRET WEAPON UNLOCKED</span>
+            <span>SECRET WEAPON FOUND</span>
             <span>=AI()</span>
         </div>
         <div class="modal-body">
             <div class="bonus-content">
-                <p style="font-size:14px; color:var(--zalando-orange); font-weight:bold;">
+                <p style="color:var(--zalando-orange); margin-bottom:20px;">
                     NEW SKILL ACQUIRED: AI CELL MODE
                 </p>
-                <p style="font-family:'Roboto'; font-size:14px; text-transform:none; line-height:1.5;">
-                    The feature you asked about is officially known as the <strong>AI Function</strong>. It allows you to use Gemini directly inside a cell.
+                <p>
+                    The feature known as the <strong>AI Function</strong> allows you to use Gemini directly inside a cell.
                 </p>
                 
                 <h3>KEY CAPABILITIES</h3>
-                <ul style="font-family:'Roboto'">
-                    <li><strong>Generate Text:</strong> Create slogans or emails.<br><code>=AI("Write a slogan for...", A2)</code></li>
-                    <li><strong>Summarize:</strong> Condense long feedback.<br><code>=AI("Summarize this review", D2)</code></li>
-                    <li><strong>Categorize:</strong> Organize data by sentiment.<br><code>=AI("Classify as Positive/Negative", C5)</code></li>
-                    <li><strong>Analyze:</strong> Get insights instantly.</li>
+                <ul>
+                    <li>
+                        <strong>GENERATE TEXT:</strong> Create slogans or emails.
+                        <code>=AI("Write a slogan for...", A2)</code>
+                    </li>
+                    <li>
+                        <strong>SUMMARIZE:</strong> Condense feedback.
+                        <code>=AI("Summarize this review", D2)</code>
+                    </li>
+                    <li>
+                        <strong>CATEGORIZE:</strong> Organize data.
+                        <code>=AI("Classify Sentiment", C5)</code>
+                    </li>
                 </ul>
 
                 <h3>HOW TO USE IT</h3>
-                <p style="font-family:'Roboto'; font-size:14px; text-transform:none;">
-                    1. Type <code>=AI("Prompt", [Cell])</code> in an empty cell.<br>
-                    2. Drag the formula down to apply to the whole column.<br>
-                    3. Watch Gemini do the heavy lifting.
+                <p>
+                    1. Type <strong>=AI("Prompt", [Cell])</strong><br>
+                    2. Drag formula down.<br>
+                    3. Watch Gemini work.
                 </p>
             </div>
             <button class="btn-arcade" style="text-align:center; margin-top:20px;" onclick="location.reload()">FINISH TRAINING</button>
@@ -463,12 +489,12 @@
     const CHALLENGES = {
         'G1': { 
             title: "DATA CREATION & ORG",
-            tag: "SMART FILL / TABLES",
-            desc: "We need a 'Project Tracker' for the new season launch ASAP. Also, the 'Category' column is inconsistent (some say 'Shoes', others 'Footwear').",
+            tag: "SMART FILL",
+            desc: "PROJECT TRACKER NEEDED. CATEGORY COLUMN IS INCONSISTENT ('SHOES' VS 'FOOTWEAR').",
             options: [
-                "A) Manually type a table and fix categories one by one.",
-                "B) Prompt: 'Create a project tracker for fashion launch'. Then use Smart Fill to standardize 'Footwear' to 'Shoes'.",
-                "C) Create a blank sheet and email the team to fill it in."
+                "A) MANUALLY TYPE TABLE & FIX.",
+                "B) PROMPT: 'CREATE TRACKER'. USE SMART FILL TO FIX.",
+                "C) EMAIL TEAM TO FILL BLANK SHEET."
             ],
             correctIdx: 1, 
             fixType: 'H' 
@@ -476,11 +502,11 @@
         'G2': { 
             title: "FORMULAS & CALCS",
             tag: "GENERATE FORMULAS",
-            desc: "We need the average price of 'Tools' rated 4-stars or higher. Writing the query manually is prone to syntax errors.",
+            desc: "NEED AVG PRICE OF 4-STAR TOOLS. MANUAL FORMULAS ARE ERROR-PRONE.",
             options: [
-                "A) Prompt: 'Create a formula that calculates the average price of Tools with a 4-star rating or higher'.",
-                "B) Search Google for 'Averageifs excel syntax' and try to debug.",
-                "C) Filter the table, copy to a new sheet, and use =AVERAGE()."
+                "A) PROMPT: 'CALCULATE AVG PRICE OF 4-STAR TOOLS'.",
+                "B) GOOGLE 'AVERAGEIFS SYNTAX' AND DEBUG.",
+                "C) FILTER, COPY, USE =AVERAGE()."
             ],
             correctIdx: 0, 
             fixType: 'H' 
@@ -488,23 +514,23 @@
         'G3': { 
             title: "EDITING & FORMATTING",
             tag: "COMPLEX EDITS",
-            desc: "The 'Status' column is messy text. We need standard Dropdowns (Open, In Progress, Done) and Conditional Formatting (Done = Green) for clarity.",
+            desc: "STATUS COLUMN MESSY. NEED DROPDOWNS & COLOR CODING.",
             options: [
-                "A) Go to Data Validation, set up list manually. Then go to Conditional Formatting rules manually.",
-                "B) Leave it as text and color cells manually.",
-                "C) Prompt: 'Add dropdowns for Status (Open, In Progress, Done) and apply conditional formatting where Done is green'."
+                "A) MANUAL DATA VALIDATION & CONDITIONAL FORMATTING.",
+                "B) COLOR CELLS MANUALLY.",
+                "C) PROMPT: 'ADD DROPDOWNS & GREEN FORMATTING FOR DONE'."
             ],
             correctIdx: 2, 
             fixType: 'H' 
         },
         'G4': { 
-            title: "ANALYSIS & VISUALIZATION",
+            title: "ANALYSIS & VIZ",
             tag: "UNLOCK INSIGHTS",
-            desc: "Management asks: 'What are the key takeaways for sales growth?'. They also want a Bar Chart of Sales by Region immediately.",
+            desc: "MGMT ASKS: 'KEY SALES TRENDS?'. ALSO NEED BAR CHART BY REGION.",
             options: [
-                "A) Prompt: 'What are the key takeaways for sales growth?' followed by 'Create a bar chart of Sales by Region'.",
-                "B) Read all 1000 rows to find trends. Draw a chart in Paint.",
-                "C) Send the raw data file to Management."
+                "A) PROMPT: 'KEY TAKEAWAYS?' THEN 'CREATE BAR CHART'.",
+                "B) READ 1000 ROWS. DRAW IN PAINT.",
+                "C) SEND RAW CSV."
             ],
             correctIdx: 0, 
             fixType: 'H' 
@@ -671,7 +697,7 @@
             document.getElementById('fixed-count').innerText = fixedCount;
             document.getElementById('integrity').innerText = (fixedCount * 25) + "%";
         } else {
-            alert("Inefficient method. Try again!");
+            alert("INEFFICIENT METHOD. TRY AGAIN.");
         }
     }
 
@@ -692,7 +718,6 @@
         let startTile = grid[0][0];
         waterQueue = [startTile];
         
-        // Show Start Water
         startTile.el.querySelector('.w-center').style.display = 'block';
         startTile.el.querySelector('.w-e').style.display = 'block'; 
 
@@ -759,12 +784,11 @@
             document.getElementById('modal-win').style.display = 'flex';
         } else {
             st.innerText = "UNSTABLE";
-            setTimeout(() => alert("Pipeline complete, but glitches remain! Fix them all."), 100);
+            setTimeout(() => alert("PIPELINE COMPLETE BUT GLITCHES REMAIN!"), 100);
             setTimeout(resetWater, 2000);
         }
     }
 
-    // Added showBonus function
     function showBonus() {
         document.getElementById('modal-win').style.display = 'none';
         document.getElementById('modal-bonus').style.display = 'flex';
